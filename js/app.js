@@ -164,8 +164,33 @@
       <p class="prompt">${md(q.prompt)}</p>
       ${answerControls(q.id, q.answer)}
       <div class="feedback" role="status" aria-live="polite"></div>
+      ${q.followup ? followupHTML(q.id, q.followup) : ""}
       <details class="solution"><summary>Show solution</summary>${sol}</details>
     </article>`;
+  }
+
+  // Task 2: after a correct answer, the oral examiner asks why.
+  function followupHTML(id, f) {
+    return `<section class="followup" hidden aria-label="Examiner follow-up">
+      <p class="followup-label">The examiner asks</p>
+      <p class="followup-q">${md(f.q)}</p>
+      <label class="small muted" for="f-${esc(id)}">Say your answer out loud, or write it here first</label>
+      <textarea id="f-${esc(id)}" rows="2"></textarea>
+      <div class="btn-row" style="margin-top:.6rem"><button class="btn secondary" data-act="followup-reveal">Compare with model answer</button></div>
+      <div class="followup-model" hidden>
+        <div class="model"><p class="key" style="margin:0 0 .4rem">Model answer</p><p style="margin:0">${md(f.a)}</p></div>
+        <div class="btn-row"><span class="small">Could you explain it?</span>
+          <button class="btn secondary" data-act="explain-ok">Yes, I could explain it</button>
+          <button class="btn quiet" data-act="explain-no">Not yet</button></div>
+        <p class="small explain-status" role="status"></p>
+      </div>
+    </section>`;
+  }
+
+  // Task 2: a wrong answer that matches a known mistake gets a diagnosis.
+  function diagnose(item, raw) {
+    if (!item.mistakes) return null;
+    return item.mistakes.find(m => check(m.answer, raw).ok) || null;
   }
 
   function answerControls(id, spec, unit) {
@@ -188,7 +213,7 @@
   }
 
   // Wire up all sheets inside root. getSpec(id) returns {spec, unit}.
-  function wireSheets(root, getSpec, onResult) {
+  function wireSheets(root, getSpec, onResult, onExplain) {
     root.addEventListener("click", e => {
       const btn = e.target.closest("[data-act]");
       if (!btn) return;
@@ -206,10 +231,32 @@
         if (r.invalid) { fb.className = "feedback no"; fb.textContent = r.invalid; return; }
         setMark(sheet, r.ok);
         fb.className = "feedback " + (r.ok ? "ok" : "no");
-        fb.innerHTML = r.ok
-          ? `Correct. <span class="detail">Expected ${esc(keyText(spec, unit))}.</span>`
-          : `Not this one. <span class="detail">Try again, or open the solution to see where it differs.</span>`;
-        onResult && onResult(id, r.ok);
+        const item = getSpec(id);
+        const d = r.ok ? null : diagnose(item, raw);
+        if (r.ok) {
+          fb.innerHTML = `Correct. <span class="detail">Expected ${esc(keyText(spec, unit))}.</span>`;
+          const fu = sheet.querySelector(".followup");
+          if (fu && fu.hidden) { fu.hidden = false; fb.innerHTML += ` <span class="detail">Now explain how you got it.</span>`; }
+        } else if (d) {
+          fb.innerHTML = `Not this one, but this is a known mistake.
+            <div class="diagnosis"><p><strong>Likely cause:</strong> ${md(d.hint)}</p>
+            ${d.sql ? `<details><summary>Show the query that gives your number</summary><pre class="sql"><code>${esc(d.sql)}</code></pre></details>` : ""}</div>`;
+        } else {
+          fb.innerHTML = `Not this one. <span class="detail">It doesn't match a mistake we know of. Re-read the filters and units in the question, or open the solution.</span>`;
+        }
+        onResult && onResult(id, r.ok, d ? "diagnosed" : null);
+      }
+      if (act === "followup-reveal") {
+        sheet.querySelector(".followup-model").hidden = false;
+        btn.hidden = true;
+        sheet.querySelector("[data-act=explain-ok]").focus();
+      }
+      if (act === "explain-ok" || act === "explain-no") {
+        const ok = act === "explain-ok";
+        sheet.querySelector(".explain-status").textContent = ok
+          ? "Good. At the exam, give this explanation without being asked."
+          : "Read the model answer again and try saying it in your own words.";
+        onExplain && onExplain(id, ok);
       }
       if (act === "reveal") {
         const box = sheet.querySelector(".model-box");
@@ -269,15 +316,18 @@
     });
   }
 
-  function scoreHTML(total) {
-    return `<section class="score" aria-live="polite"><strong class="score-num">0 of ${total}</strong> <span class="muted">questions marked correct so far.</span></section>`;
+  function scoreHTML(total, withExplain) {
+    return `<section class="score" aria-live="polite">
+      <p style="margin:0"><strong class="score-num">0 of ${total}</strong> <span class="muted">answers correct</span></p>
+      ${withExplain ? `<p style="margin:.25rem 0 0"><strong class="score-exp">0 of ${total}</strong> <span class="muted">explained. At the oral exam you also have to say how you got each number.</span></p>` : ""}
+    </section>`;
   }
-  function scoreKeeper(root, total) {
-    const res = {};
-    return (id, ok) => {
-      res[id] = ok;
-      const n = Object.values(res).filter(Boolean).length;
-      root.querySelector(".score-num").textContent = `${n} of ${total}`;
+  function scoreKeeper(root, total, withExplain) {
+    const res = {}, exp = {};
+    const count = o => Object.values(o).filter(Boolean).length;
+    return {
+      result: (id, ok) => { res[id] = ok; root.querySelector(".score-num").textContent = `${count(res)} of ${total}`; },
+      explain: (id, ok) => { exp[id] = ok; if (withExplain) root.querySelector(".score-exp").textContent = `${count(exp)} of ${total}`; },
     };
   }
 
@@ -356,7 +406,7 @@
     </section>
     ${timerHTML(MANIP_MINUTES)}
     ${qs.map((q, i) => bankSheet(q, { number: i + 1 })).join("")}
-    ${scoreHTML(qs.length)}
+    ${scoreHTML(qs.length, true)}
     <div class="pager">${neighbour(BANK.exams, e.id, "#/exams/", "Exam ")}</div>`;
   }
 
@@ -500,7 +550,7 @@
     ${outputHTML(e.output)}
     ${timerHTML(INTERP_MINUTES)}
     ${sheets}
-    ${scoreHTML(e.questions.length)}
+    ${scoreHTML(e.questions.length, false)}
     <div class="pager">${neighbour(INTERP, e.id, "#/interpretation/", "Exam ")}</div>`;
   }
 
@@ -538,7 +588,8 @@
             const total = (BANK.exams.find(x => x.id === id) || { questions: [] }).questions.length;
             if (!total) return;
             wireTimer(pg(), MANIP_MINUTES);
-            wireSheets(pg(), qid => ({ spec: QMAP[qid].answer }), scoreKeeper(pg(), total));
+            const keep = scoreKeeper(pg(), total, true);
+            wireSheets(pg(), qid => ({ spec: QMAP[qid].answer, mistakes: QMAP[qid].mistakes }), keep.result, keep.explain);
           };
         } else {
           html = examsList(); titleBits = ["Data manipulation exams"];
@@ -555,8 +606,9 @@
             const e = INTERP.find(x => x.id === id);
             if (!e) return;
             wireTimer(pg(), INTERP_MINUTES);
-            wireSheets(pg(), qid => { const q = e.questions[+qid.split("-")[1] - 1]; return { spec: q.answer, unit: q.unit }; },
-              scoreKeeper(pg(), e.questions.length));
+            const keep = scoreKeeper(pg(), e.questions.length, false);
+            wireSheets(pg(), qid => { const q = e.questions[+qid.split("-")[1] - 1]; return { spec: q.answer, unit: q.unit, mistakes: q.mistakes }; },
+              keep.result);
           };
         } else {
           html = interpList(); titleBits = ["Data interpretation exams"];
@@ -568,7 +620,7 @@
       case "questions":
         if (id) {
           html = questionPage(id); titleBits = [id];
-          after = () => QMAP[id] && wireSheets(pg(), qid => ({ spec: QMAP[qid].answer }));
+          after = () => QMAP[id] && wireSheets(pg(), qid => ({ spec: QMAP[qid].answer, mistakes: QMAP[qid].mistakes }));
         } else {
           html = questionsPage(); titleBits = ["Question bank"];
           after = () => {

@@ -85,7 +85,25 @@ window.INTERP = [
      "tol": 13.956294
     },
     "unit": "USD",
-    "explain": "Intercept + tmax × 70 + gameDay × 1 = 2,623.39 + 9.9120 × 70 + 1,334.87 = 4,652.10."
+    "explain": "Intercept + tmax × 70 + gameDay × 1 = 2,623.39 + 9.9120 × 70 + 1,334.87 = 4,652.10.",
+    "mistakes": [
+     {
+      "answer": {
+       "type": "number",
+       "value": 3317.2312,
+       "tol": 5
+      },
+      "hint": "You left out the gameDay coefficient. On a game day gameDay = 1, so add its coefficient."
+     },
+     {
+      "answer": {
+       "type": "number",
+       "value": 2028.7068,
+       "tol": 5
+      },
+      "hint": "You left out the intercept. Every prediction starts from the intercept."
+     }
+    ]
    },
    {
     "prompt": "Explain to Bob, in one or two sentences, what the coefficient on tmax means.",
@@ -117,7 +135,25 @@ window.INTERP = [
      "tol": 0.06
     },
     "unit": "%",
-    "explain": "R Square = 0.1153, so the model explains 11.5% of the variation."
+    "explain": "R Square = 0.1153, so the model explains 11.5% of the variation.",
+    "mistakes": [
+     {
+      "answer": {
+       "type": "number",
+       "value": 0.1153,
+       "tol": 0.0006
+      },
+      "hint": "R Square is a share. Multiply by 100 to express it as a percentage."
+     },
+     {
+      "answer": {
+       "type": "number",
+       "value": 10.9611,
+       "tol": 0.06
+      },
+      "hint": "That is Adjusted R Square. The share of variation explained is R Square."
+     }
+    ]
    },
    {
     "prompt": "Bob wants to use this model to decide how many staff to schedule. How confident should he be in a prediction for a single day? Mention one reason.",
@@ -227,7 +263,17 @@ window.INTERP = [
      "tol": 8.3485629
     },
     "unit": "USD",
-    "explain": "On non-game days both gameDay terms are zero: 819.95 + 0.6543 × 3,000 = 2,782.85."
+    "explain": "On non-game days both gameDay terms are zero: 819.95 + 0.6543 × 3,000 = 2,782.85.",
+    "mistakes": [
+     {
+      "answer": {
+       "type": "number",
+       "value": 1962.9,
+       "tol": 5
+      },
+      "hint": "You left out the intercept. Every prediction starts from the intercept."
+     }
+    ]
    },
    {
     "prompt": "By how much does a game day change predicted sales when last year's sales on that day were $4,000?",
@@ -237,7 +283,25 @@ window.INTERP = [
      "tol": 7.328786
     },
     "unit": "USD",
-    "explain": "Game-day effect = gameDay + interaction × netTotal_364 = -54.60 + 0.4717 × 4,000 = 1,832.20."
+    "explain": "Game-day effect = gameDay + interaction × netTotal_364 = -54.60 + 0.4717 × 4,000 = 1,832.20.",
+    "mistakes": [
+     {
+      "answer": {
+       "type": "number",
+       "value": -54.6035,
+       "tol": 1
+      },
+      "hint": "That is only the gameDay coefficient. With an interaction, the game-day effect also includes interaction × netTotal_364."
+     },
+     {
+      "answer": {
+       "type": "number",
+       "value": 1886.8,
+       "tol": 5
+      },
+      "hint": "You used only the interaction term. Add the gameDay coefficient as well."
+     }
+    ]
    },
    {
     "prompt": "Explain the interaction coefficient to Bob in plain language.",
@@ -268,7 +332,17 @@ window.INTERP = [
      "tol": 0.0006
     },
     "unit": "",
-    "explain": "Read it from Regression Statistics: 0.5799."
+    "explain": "Read it from Regression Statistics: 0.5799.",
+    "mistakes": [
+     {
+      "answer": {
+       "type": "number",
+       "value": 0.5839,
+       "tol": 0.0006
+      },
+      "hint": "That is R Square. Adjusted R Square is the row below it."
+     }
+    ]
    }
   ]
  },
@@ -370,7 +444,25 @@ window.INTERP = [
      "tol": 17.0111874
     },
     "unit": "USD",
-    "explain": "77.69 + 31.7802 × 160 + 50.7872 × 10 + 335.14 × 0 = 5,670.40."
+    "explain": "77.69 + 31.7802 × 160 + 50.7872 × 10 + 335.14 × 0 = 5,670.40.",
+    "mistakes": [
+     {
+      "answer": {
+       "type": "number",
+       "value": 6005.5385,
+       "tol": 5
+      },
+      "hint": "You added the Location2 coefficient. The employee works at location 1, so Location2 = 0."
+     },
+     {
+      "answer": {
+       "type": "number",
+       "value": 5592.704,
+       "tol": 5
+      },
+      "hint": "You left out the intercept. Every prediction starts from the intercept."
+     }
+    ]
    },
    {
     "prompt": "According to the model, how much more does an overtime hour cost than a regular hour?",
@@ -380,7 +472,17 @@ window.INTERP = [
      "tol": 0.02
     },
     "unit": "USD per hour",
-    "explain": "OTHours − RegHours = 50.7872 − 31.7802 = 19.01."
+    "explain": "OTHours − RegHours = 50.7872 − 31.7802 = 19.01.",
+    "mistakes": [
+     {
+      "answer": {
+       "type": "number",
+       "value": 50.7872,
+       "tol": 0.02
+      },
+      "hint": "That is what an overtime hour costs in total. The question asks how much more it costs than a regular hour: subtract the RegHours coefficient."
+     }
+    ]
    },
    {
     "prompt": "Interpret the Location2 coefficient for Noah.",
@@ -410,7 +512,17 @@ window.INTERP = [
      "tol": 0.006
     },
     "unit": "USD per hour",
-    "explain": "Read Upper 95% in the OTHours row. The true effect of one overtime hour plausibly lies between Lower 95% and Upper 95%."
+    "explain": "Read Upper 95% in the OTHours row. The true effect of one overtime hour plausibly lies between Lower 95% and Upper 95%.",
+    "mistakes": [
+     {
+      "answer": {
+       "type": "number",
+       "value": 43.6491,
+       "tol": 0.006
+      },
+      "hint": "That is the lower limit. The upper limit is in the Upper 95% column."
+     }
+    ]
    }
   ]
  },
@@ -512,7 +624,25 @@ window.INTERP = [
      "tol": 107.18200530000001
     },
     "unit": "USD",
-    "explain": "142.91 + 1,870.2840 × 12 + 11,572.80 × 1 + 313.6434 × 5 = 35,727.34."
+    "explain": "142.91 + 1,870.2840 × 12 + 11,572.80 × 1 + 313.6434 × 5 = 35,727.34.",
+    "mistakes": [
+     {
+      "answer": {
+       "type": "number",
+       "value": 24154.535,
+       "tol": 10
+      },
+      "hint": "You left out the June coefficient. The question is about June, so June = 1."
+     },
+     {
+      "answer": {
+       "type": "number",
+       "value": 1602376.1181,
+       "tol": 10
+      },
+      "hint": "You entered the limit as 5,000. AvgLimit_k is measured in thousands, so $5,000 is 5."
+     }
+    ]
    },
    {
     "prompt": "Which variables are statistically significant at the 5% level?",
@@ -559,7 +689,17 @@ window.INTERP = [
      "tol": 1.0
     },
     "unit": "USD",
-    "explain": "Standard Error in Regression Statistics: 7,304.07."
+    "explain": "Standard Error in Regression Statistics: 7,304.07.",
+    "mistakes": [
+     {
+      "answer": {
+       "type": "number",
+       "value": 53349368.0644,
+       "tol": 1.0
+      },
+      "hint": "That is MS Residual, the squared standard error. Take its square root, or read Standard Error under Regression Statistics."
+     }
+    ]
    }
   ]
  },
@@ -661,7 +801,25 @@ window.INTERP = [
      "tol": 0.06
     },
     "unit": "hours",
-    "explain": "14.3522 + 0.1187 × 5 + 3.1924 × 0 + -0.8244 × 1 = 14.12."
+    "explain": "14.3522 + 0.1187 × 5 + 3.1924 × 0 + -0.8244 × 1 = 14.12.",
+    "mistakes": [
+     {
+      "answer": {
+       "type": "number",
+       "value": 14.9457,
+       "tol": 0.06
+      },
+      "hint": "You left out the Weekend coefficient. The shoot starts on a weekend, so Weekend = 1."
+     },
+     {
+      "answer": {
+       "type": "number",
+       "value": 17.3137,
+       "tol": 0.06
+      },
+      "hint": "You added the Television coefficient. This is not a television shoot, so Television = 0."
+     }
+    ]
    },
    {
     "prompt": "Interpret the Weekend coefficient.",
@@ -694,7 +852,17 @@ window.INTERP = [
      "tol": 0.06
     },
     "unit": "%",
-    "explain": "1 − R Square = 1 − 0.1334 = 86.7%."
+    "explain": "1 − R Square = 1 − 0.1334 = 86.7%.",
+    "mistakes": [
+     {
+      "answer": {
+       "type": "number",
+       "value": 13.3405,
+       "tol": 0.06
+      },
+      "hint": "That is the share the model explains. The unexplained share is 100% minus R Square."
+     }
+    ]
    },
    {
     "prompt": "A planner says: \"Entering permits earlier makes shoots longer, so we should limit early applications.\" Respond.",
@@ -804,7 +972,17 @@ window.INTERP = [
      "tol": 75.89821950000001
     },
     "unit": "USD",
-    "explain": "3,229.08 + 119.2727 × 150 + 4,179.42 × 1 + -123.47 × 0 = 25,299.41."
+    "explain": "3,229.08 + 119.2727 × 150 + 4,179.42 × 1 + -123.47 × 0 = 25,299.41.",
+    "mistakes": [
+     {
+      "answer": {
+       "type": "number",
+       "value": 21119.9892,
+       "tol": 10
+      },
+      "hint": "You left out the ConferenceDay coefficient. It is a conference day, so ConferenceDay = 1."
+     }
+    ]
    },
    {
     "prompt": "How much extra revenue is associated with one more occupied room? Round to two decimals.",
@@ -814,7 +992,17 @@ window.INTERP = [
      "tol": 0.006
     },
     "unit": "USD",
-    "explain": "Read the OccupiedRooms coefficient."
+    "explain": "Read the OccupiedRooms coefficient.",
+    "mistakes": [
+     {
+      "answer": {
+       "type": "number",
+       "value": 2.5537,
+       "tol": 0.006
+      },
+      "hint": "That is the standard error of the coefficient. The effect itself is in the Coefficients column."
+     }
+    ]
    },
    {
     "prompt": "Is the Weekend coefficient statistically significant at the 5% level?",

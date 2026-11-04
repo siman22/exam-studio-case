@@ -49,6 +49,7 @@ def p(out, name):
 
 
 def num(v, tol): return {"type": "number", "value": round(v, 4), "tol": tol}
+def wrong(v, tol, hint): return {"answer": num(v, tol), "hint": hint}
 def choice(options, correct): return {"type": "choice", "options": options, "correct": correct}
 def open_(model): return {"type": "open", "model": model}
 
@@ -85,14 +86,18 @@ exams.append({
     "output": o,
     "questions": [
         {"prompt": "Predict daily net sales on a game day with a maximum temperature of 70 °F.", "answer": num(pred, max(5, abs(pred) * 0.003)), "unit": "USD",
-         "explain": f"Intercept + tmax × 70 + gameDay × 1 = {c(o,'Intercept'):,.2f} + {c(o,'tmax'):,.4f} × 70 + {c(o,'gameDay'):,.2f} = {pred:,.2f}."},
+         "explain": f"Intercept + tmax × 70 + gameDay × 1 = {c(o,'Intercept'):,.2f} + {c(o,'tmax'):,.4f} × 70 + {c(o,'gameDay'):,.2f} = {pred:,.2f}.",
+         "mistakes": [wrong(pred - c(o, "gameDay"), 5, "You left out the gameDay coefficient. On a game day gameDay = 1, so add its coefficient."),
+                      wrong(pred - c(o, "Intercept"), 5, "You left out the intercept. Every prediction starts from the intercept.")]},
         {"prompt": "Explain to Bob, in one or two sentences, what the coefficient on tmax means.", "answer": open_(
             f"Holding game days constant, each additional degree Fahrenheit is associated with about ${c(o,'tmax'):.2f} more daily sales. It is an association, not proof that warmth causes the extra sales."),
          "explain": "A good answer names the unit (one °F), the size, the direction, holds the other variable constant and avoids claiming causality."},
         {"prompt": "Which variables are statistically significant at the 5% level?", "answer": sig_choice(o, ["tmax", "gameDay"]),
          "explain": "Compare each P-value with 0.05. " + "; ".join(f"{nm}: p = {p(o,nm):.4f}" for nm in ["tmax", "gameDay"]) + "."},
         {"prompt": "What percentage of the variation in daily sales does the model explain? Round to one decimal.", "answer": num(o["stats"]["r2"] * 100, 0.06), "unit": "%",
-         "explain": f"R Square = {o['stats']['r2']:.4f}, so the model explains {o['stats']['r2']*100:.1f}% of the variation."},
+         "explain": f"R Square = {o['stats']['r2']:.4f}, so the model explains {o['stats']['r2']*100:.1f}% of the variation.",
+         "mistakes": [wrong(o["stats"]["r2"], 0.0006, "R Square is a share. Multiply by 100 to express it as a percentage."),
+                      wrong(o["stats"]["adjR2"] * 100, 0.06, "That is Adjusted R Square. The share of variation explained is R Square.")]},
         {"prompt": "Bob wants to use this model to decide how many staff to schedule. How confident should he be in a prediction for a single day? Mention one reason.", "answer": open_(
             f"Not very. R² is only {o['stats']['r2']:.2f} and the standard error is about ${o['stats']['se']:,.0f}, so actual sales on a given day can easily differ from the prediction by more than $1,000. Only 13 game days support the gameDay estimate, and other drivers (weekday, season, holidays) are left out."),
          "explain": "Strong answers use the standard error or R² from the output to quantify uncertainty."},
@@ -113,9 +118,12 @@ exams.append({
     "output": o,
     "questions": [
         {"prompt": "Predict sales on a day without a game, when sales on the same day last year were $3,000.", "answer": num(pred_ng, max(5, pred_ng * 0.003)), "unit": "USD",
-         "explain": f"On non-game days both gameDay terms are zero: {c(o,'Intercept'):,.2f} + {c(o,'netTotal_364'):.4f} × 3,000 = {pred_ng:,.2f}."},
+         "explain": f"On non-game days both gameDay terms are zero: {c(o,'Intercept'):,.2f} + {c(o,'netTotal_364'):.4f} × 3,000 = {pred_ng:,.2f}.",
+         "mistakes": [wrong(pred_ng - c(o, "Intercept"), 5, "You left out the intercept. Every prediction starts from the intercept.")]},
         {"prompt": "By how much does a game day change predicted sales when last year's sales on that day were $4,000?", "answer": num(effect, max(5, abs(effect) * 0.004)), "unit": "USD",
-         "explain": f"Game-day effect = gameDay + interaction × netTotal_364 = {c(o,'gameDay'):,.2f} + {c(o,'gameDay_x_netTotal_364'):.4f} × 4,000 = {effect:,.2f}."},
+         "explain": f"Game-day effect = gameDay + interaction × netTotal_364 = {c(o,'gameDay'):,.2f} + {c(o,'gameDay_x_netTotal_364'):.4f} × 4,000 = {effect:,.2f}.",
+         "mistakes": [wrong(c(o, "gameDay"), 1, "That is only the gameDay coefficient. With an interaction, the game-day effect also includes interaction × netTotal_364."),
+                      wrong(c(o, "gameDay_x_netTotal_364") * 4000, 5, "You used only the interaction term. Add the gameDay coefficient as well.")]},
         {"prompt": "Explain the interaction coefficient to Bob in plain language.", "answer": open_(
             f"Game days add more to sales on days that were already busy. For every extra $1 of sales on the same day last year, a game day adds about ${c(o,'gameDay_x_netTotal_364'):.2f} on top of the normal game-day effect."),
          "explain": "The interaction says the effect of one variable depends on the level of the other."},
@@ -124,7 +132,8 @@ exams.append({
              "No, because R Square is high"], "No, its meaning changed: it is the game-day effect when netTotal_364 is zero"),
          "explain": f"With an interaction, the gameDay coefficient (p = {p(o,'gameDay'):.3f}) is the effect at netTotal_364 = 0, a day that never occurs. The interaction (p = {p(o,'gameDay_x_netTotal_364'):.4f}) carries the game-day effect."},
         {"prompt": "What is the Adjusted R Square? Round to three decimals.", "answer": num(o["stats"]["adjR2"], 0.0006), "unit": "",
-         "explain": f"Read it from Regression Statistics: {o['stats']['adjR2']:.4f}."},
+         "explain": f"Read it from Regression Statistics: {o['stats']['adjR2']:.4f}.",
+         "mistakes": [wrong(o["stats"]["r2"], 0.0006, "That is R Square. Adjusted R Square is the row below it.")]},
     ]})
 
 # ---------------------------------------------------------------- R3 IntegrateCo payroll
@@ -144,16 +153,20 @@ exams.append({
     "output": o,
     "questions": [
         {"prompt": "Predict monthly gross wages for an employee at location 1 with 160 regular hours and 10 overtime hours.", "answer": num(pred, max(5, pred * 0.003)), "unit": "USD",
-         "explain": f"{c(o,'Intercept'):,.2f} + {c(o,'RegHours'):.4f} × 160 + {c(o,'OTHours'):.4f} × 10 + {c(o,'Location2'):,.2f} × 0 = {pred:,.2f}."},
+         "explain": f"{c(o,'Intercept'):,.2f} + {c(o,'RegHours'):.4f} × 160 + {c(o,'OTHours'):.4f} × 10 + {c(o,'Location2'):,.2f} × 0 = {pred:,.2f}.",
+         "mistakes": [wrong(pred + c(o, "Location2"), 5, "You added the Location2 coefficient. The employee works at location 1, so Location2 = 0."),
+                      wrong(pred - c(o, "Intercept"), 5, "You left out the intercept. Every prediction starts from the intercept.")]},
         {"prompt": "According to the model, how much more does an overtime hour cost than a regular hour?", "answer": num(premium, 0.02), "unit": "USD per hour",
-         "explain": f"OTHours − RegHours = {c(o,'OTHours'):.4f} − {c(o,'RegHours'):.4f} = {premium:.2f}."},
+         "explain": f"OTHours − RegHours = {c(o,'OTHours'):.4f} − {c(o,'RegHours'):.4f} = {premium:.2f}.",
+         "mistakes": [wrong(c(o, "OTHours"), 0.02, "That is what an overtime hour costs in total. The question asks how much more it costs than a regular hour: subtract the RegHours coefficient.")]},
         {"prompt": "Interpret the Location2 coefficient for Noah.", "answer": open_(
             f"For the same regular and overtime hours, employees at location 2 earn about ${c(o,'Location2'):,.0f} more per month than employees at location 1. Noah should check whether job mix or seniority explains the gap before concluding that location 2 overpays."),
          "explain": "A dummy coefficient is the difference relative to the omitted category (location 1), holding the other variables constant."},
         {"prompt": "Is the location difference statistically significant at the 5% level?", "answer": sig_choice(o, ["Location2"]),
          "explain": f"P-value for Location2 = {p(o,'Location2'):.4g}, compared with 0.05."},
         {"prompt": "What is the upper limit of the 95% confidence interval for OTHours? Round to two decimals.", "answer": num(next(r['hi'] for r in o['coef'] if r['name']=='OTHours'), 0.006), "unit": "USD per hour",
-         "explain": "Read Upper 95% in the OTHours row. The true effect of one overtime hour plausibly lies between Lower 95% and Upper 95%."},
+         "explain": "Read Upper 95% in the OTHours row. The true effect of one overtime hour plausibly lies between Lower 95% and Upper 95%.",
+         "mistakes": [wrong(next(r['lo'] for r in o['coef'] if r['name']=='OTHours'), 0.006, "That is the lower limit. The upper limit is in the Upper 95% column.")]},
     ]})
 
 # ---------------------------------------------------------------- R4 P-card spending and fiscal year end
@@ -172,7 +185,9 @@ exams.append({
     "output": o,
     "questions": [
         {"prompt": "Predict June spending for a department with 12 cardholders and an average limit of $5,000 (AvgLimit_k = 5).", "answer": num(pred, max(10, pred * 0.003)), "unit": "USD",
-         "explain": f"{c(o,'Intercept'):,.2f} + {c(o,'Cardholders'):,.4f} × 12 + {c(o,'June'):,.2f} × 1 + {c(o,'AvgLimit_k'):,.4f} × 5 = {pred:,.2f}."},
+         "explain": f"{c(o,'Intercept'):,.2f} + {c(o,'Cardholders'):,.4f} × 12 + {c(o,'June'):,.2f} × 1 + {c(o,'AvgLimit_k'):,.4f} × 5 = {pred:,.2f}.",
+         "mistakes": [wrong(pred - c(o, "June"), 10, "You left out the June coefficient. The question is about June, so June = 1."),
+                      wrong(pred + c(o, "AvgLimit_k") * (5000 - 5), 10, "You entered the limit as 5,000. AvgLimit_k is measured in thousands, so $5,000 is 5.")]},
         {"prompt": "Which variables are statistically significant at the 5% level?", "answer": sig_choice(o, ["Cardholders", "June", "AvgLimit_k"]),
          "explain": "; ".join(f"{nm}: p = {p(o,nm):.4f}" for nm in ["Cardholders", "June", "AvgLimit_k"]) + "."},
         {"prompt": "What does the June coefficient suggest to an internal auditor, and what would you test next?", "answer": open_(
@@ -183,7 +198,8 @@ exams.append({
             "No, the coefficient is not statistically different from zero" if p(o, "AvgLimit_k") >= 0.05 else "Yes, the coefficient is positive"),
          "explain": f"p = {p(o,'AvgLimit_k'):.3f} and the 95% interval includes zero. A significant F-test only says the variables are jointly useful."},
         {"prompt": "What is the standard error of the regression (the typical size of a prediction error)? Round to the nearest dollar.", "answer": num(o["stats"]["se"], 1.0), "unit": "USD",
-         "explain": f"Standard Error in Regression Statistics: {o['stats']['se']:,.2f}."},
+         "explain": f"Standard Error in Regression Statistics: {o['stats']['se']:,.2f}.",
+         "mistakes": [wrong(o["anova"]["res"][2], 1.0, "That is MS Residual, the squared standard error. Take its square root, or read Standard Error under Regression Statistics.")]},
     ]})
 
 # ---------------------------------------------------------------- R5 NYC film permits
@@ -202,14 +218,17 @@ exams.append({
     "output": o,
     "questions": [
         {"prompt": "Predict the duration of a non-television shoot that starts on a weekend and was entered 5 days in advance. Round to one decimal.", "answer": num(pred, 0.06), "unit": "hours",
-         "explain": f"{c(o,'Intercept'):.4f} + {c(o,'LeadDays'):.4f} × 5 + {c(o,'Television'):.4f} × 0 + {c(o,'Weekend'):.4f} × 1 = {pred:.2f}."},
+         "explain": f"{c(o,'Intercept'):.4f} + {c(o,'LeadDays'):.4f} × 5 + {c(o,'Television'):.4f} × 0 + {c(o,'Weekend'):.4f} × 1 = {pred:.2f}.",
+         "mistakes": [wrong(pred - c(o, "Weekend"), 0.06, "You left out the Weekend coefficient. The shoot starts on a weekend, so Weekend = 1."),
+                      wrong(pred + c(o, "Television"), 0.06, "You added the Television coefficient. This is not a television shoot, so Television = 0.")]},
         {"prompt": "Interpret the Weekend coefficient.", "answer": open_(
             f"Shoots starting on a weekend last about {abs(c(o,'Weekend')):.1f} hours {'less' if c(o,'Weekend')<0 else 'more'} than weekday shoots with the same lead time and category."),
          "explain": "Sign, size, unit and 'holding the other variables constant'."},
         {"prompt": "Which variables are statistically significant at the 5% level?", "answer": sig_choice(o, ["LeadDays", "Television", "Weekend"]),
          "explain": "; ".join(f"{nm}: p = {p(o,nm):.4g}" for nm in ["LeadDays", "Television", "Weekend"]) + "."},
         {"prompt": "What share of the variation in duration is left unexplained by the model? Round to one decimal.", "answer": num((1 - o["stats"]["r2"]) * 100, 0.06), "unit": "%",
-         "explain": f"1 − R Square = 1 − {o['stats']['r2']:.4f} = {(1-o['stats']['r2'])*100:.1f}%."},
+         "explain": f"1 − R Square = 1 − {o['stats']['r2']:.4f} = {(1-o['stats']['r2'])*100:.1f}%.",
+         "mistakes": [wrong(o["stats"]["r2"] * 100, 0.06, "That is the share the model explains. The unexplained share is 100% minus R Square.")]},
         {"prompt": "A planner says: \"Entering permits earlier makes shoots longer, so we should limit early applications.\" Respond.", "answer": open_(
             "The coefficient shows an association, not causation. Larger productions probably plan earlier and also shoot longer, so production size is an omitted variable. Limiting early applications would not shorten shoots."),
          "explain": "Look for omitted variables and reverse causality before acting on a coefficient."},
@@ -231,9 +250,11 @@ exams.append({
     "output": o,
     "questions": [
         {"prompt": "Predict revenue on a weekday conference day with 150 occupied rooms.", "answer": num(pred, max(10, pred * 0.003)), "unit": "USD",
-         "explain": f"{c(o,'Intercept'):,.2f} + {c(o,'OccupiedRooms'):.4f} × 150 + {c(o,'ConferenceDay'):,.2f} × 1 + {c(o,'Weekend'):,.2f} × 0 = {pred:,.2f}."},
+         "explain": f"{c(o,'Intercept'):,.2f} + {c(o,'OccupiedRooms'):.4f} × 150 + {c(o,'ConferenceDay'):,.2f} × 1 + {c(o,'Weekend'):,.2f} × 0 = {pred:,.2f}.",
+         "mistakes": [wrong(pred - c(o, "ConferenceDay"), 10, "You left out the ConferenceDay coefficient. It is a conference day, so ConferenceDay = 1.")]},
         {"prompt": "How much extra revenue is associated with one more occupied room? Round to two decimals.", "answer": num(c(o, "OccupiedRooms"), 0.006), "unit": "USD",
-         "explain": "Read the OccupiedRooms coefficient."},
+         "explain": "Read the OccupiedRooms coefficient.",
+         "mistakes": [wrong(next(r['se'] for r in o['coef'] if r['name']=='OccupiedRooms'), 0.006, "That is the standard error of the coefficient. The effect itself is in the Coefficients column.")]},
         {"prompt": "Is the Weekend coefficient statistically significant at the 5% level?", "answer": sig_choice(o, ["Weekend"]),
          "explain": f"P-value = {p(o,'Weekend'):.3f}."},
         {"prompt": "What does Significance F tell the controller?", "answer": open_(
@@ -243,6 +264,12 @@ exams.append({
             "Extrapolation: the data only covers 60 to 240 occupied rooms, so the linear relationship may not hold at 400 (e.g. extra staff, discounts for large groups)."),
          "explain": "Predictions far outside the range of the data are unreliable."},
     ]})
+
+for e in exams:
+    for i, q in enumerate(e["questions"]):
+        for w in q.get("mistakes", []):
+            a, b = q["answer"], w["answer"]
+            assert abs(a["value"] - b["value"]) > a["tol"] + b["tol"], f"{e['id']} Q{i+1}: diagnosis overlaps the correct answer"
 
 with open(os.path.join(ROOT, "js", "interpretation.js"), "w", encoding="utf-8") as f:
     f.write("// Generated by tools/build_interpretation.py.\n")

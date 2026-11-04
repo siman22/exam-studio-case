@@ -51,6 +51,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
 
 html { -webkit-text-size-adjust: 100%; }
 
@@ -275,3 +276,18 @@ pre.sql { font-family: var(--mono); font-size: 0.86rem; line-height: 1.5; backgr
   .timer .meta { display: none; }
   .timer .btn { min-height: 2.5rem; padding: 0.4rem 0.8rem; }
 }
+
+/* ---------------------------------------------------------- task 2: diagnosis and examiner follow-up */
+.diagnosis { margin-top: 0.6rem; padding: 0.7rem 0.9rem; border-left: 3px solid var(--red); background: var(--red-soft); color: var(--ink); font-weight: 400; }
+.diagnosis p { margin: 0; }
+.diagnosis details { margin-top: 0.5rem; }
+.diagnosis summary { cursor: pointer; color: var(--blue); font-weight: 600; width: fit-content; }
+.diagnosis pre.sql { margin-top: 0.5rem; background: var(--sheet); }
+.followup { margin-top: 1.1rem; padding: 0.9rem 1rem 1rem; border: 1px solid var(--rule-strong); border-left: 3px solid var(--blue); background: var(--blue-soft); max-width: var(--measure); }
+.followup-label { margin: 0 0 0.2rem; font-size: var(--step--1); font-weight: 600; color: var(--blue); }
+.followup-q { font-weight: 600; margin-bottom: 0.6rem; }
+.followup textarea { background: var(--sheet); }
+.followup .model { background: var(--sheet); }
+.explain-status { margin: 0.5rem 0 0; }
+pre code { background: none; border: 0; padding: 0; font-size: inherit; }
+.diagnosis pre.sql { white-space: pre-wrap; overflow-wrap: anywhere; }

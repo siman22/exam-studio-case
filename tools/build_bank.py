@@ -2,6 +2,7 @@
 Builds js/bank.js from the question bank below.
 
 Run from the repository root:   python tools/build_bank.py
+Diagnosed mistakes and examiner follow-ups come from tools/feedback.py.
 It re-runs every SQL solution against the real databases and stops if an
 answer in the bank no longer matches its query. The website itself never runs
 this script; it only reads the generated js/bank.js.
@@ -666,6 +667,42 @@ def validate():
     if failures:
         sys.exit("Answers that no longer match their SQL: " + ", ".join(failures))
 
+def build_feedback():
+    """Task 2: run every wrong method from tools/feedback.py on the real data and
+    attach the diagnoses and examiner follow-ups to the questions."""
+    import feedback as fb
+    qmap = {q["id"]: q for q in Q}
+    unknown = (set(fb.MISTAKES) | set(fb.FOLLOWUPS)) - set(qmap)
+    assert not unknown, f"feedback for unknown questions: {unknown}"
+    missing = set(qmap) - set(fb.FOLLOWUPS)
+    assert not missing, f"questions without an examiner follow-up: {sorted(missing)}"
+    conns, n = {}, 0
+    for qid, items in fb.MISTAKES.items():
+        q = qmap[qid]; spec = q["answer"]; out = []
+        for it in items:
+            if callable(it["how"]):
+                got = it["how"]()
+            else:
+                c = conns.setdefault(q["case"], open_db(q["case"]))
+                got = c.execute(it["how"]).fetchone()[0]
+            if matches(spec, got):
+                sys.exit(f"{qid}: the wrong method gives the correct answer ({got}); remove that diagnosis")
+            if spec["type"] in ("number", "percent"):
+                wrong = {"type": spec["type"], "value": float(got),
+                         "tol": spec["tol"] if it["tol"] is None else it["tol"]}
+            else:
+                wrong = {"type": "text", "accept": [str(got)]}
+            entry = {"answer": wrong, "hint": it["hint"]}
+            if not callable(it["how"]):
+                entry["sql"] = it["how"]       # shown to the student: the query that gives their number
+            out.append(entry); n += 1
+            print(f"wrong {qid}: {got}")
+        q["mistakes"] = out
+    for qid, (fq, fa) in fb.FOLLOWUPS.items():
+        qmap[qid]["followup"] = {"q": fq, "a": fa}
+    print(f"Attached {n} diagnosed mistakes and {len(fb.FOLLOWUPS)} examiner follow-ups")
+
+
 def export():
     for d in DATASETS.values():
         d["sizes"] = [os.path.getsize(os.path.join(ROOT, "data", f)) for f in d["files"]]
@@ -683,4 +720,5 @@ def export():
 
 if __name__ == "__main__":
     validate()
+    build_feedback()
     export()

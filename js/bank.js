@@ -171,6 +171,20 @@ window.BANK = {
     "Data > From Text/CSV, load to a table.",
     "Select any cell in the table; the status bar or `=ROWS(Table1)` gives the count."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 33503.0,
+      "tol": 0
+     },
+     "hint": "That count includes the header row. Count data rows only."
+    }
+   ],
+   "followup": {
+    "q": "Why does the row number of the last record differ from the record count?",
+    "a": "Row 1 holds the headers, so the last row number is the record count plus one. Counting the rows of the table avoids that off-by-one error."
+   },
    "tool": "Excel"
   },
   {
@@ -188,6 +202,10 @@ window.BANK = {
    "steps": [
     "`=COLUMNS(Table1)` or count the headers in row 1."
    ],
+   "followup": {
+    "q": "Why check the number of columns right after importing a CSV?",
+    "a": "If a delimiter appears inside a field without a text qualifier, rows split into extra columns. A column count that differs from the number of headers signals an import problem."
+   },
    "tool": "Excel"
   },
   {
@@ -205,6 +223,20 @@ window.BANK = {
    "steps": [
     "`=COUNTBLANK(Table1[ZipCode])`, or filter ZipCode on (Blanks)."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 13.0,
+      "tol": 0
+     },
+     "hint": "You also counted the zip codes that are filled in but invalid (83). Missing means blank."
+    }
+   ],
+   "followup": {
+    "q": "Why does it matter whether a value is missing or invalid?",
+    "a": "Missing values are visibly absent and can be excluded. Invalid values look like data and silently distort results, for example 83 counted as a zip code. They need different treatment and different follow-up with the data owner."
+   },
    "tool": "Excel"
   },
   {
@@ -223,6 +255,20 @@ window.BANK = {
     "Add a helper column: `=IF([@ZipCode]=\"\",\"missing\",IF(LEN([@ZipCode])=5,\"ok\",\"invalid\"))`.",
     "Count the invalid rows with COUNTIF. Both invalid rows contain 83."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 13.0,
+      "tol": 0
+     },
+     "hint": "You included the blank zip codes. The question asks for values that are filled in but not five digits."
+    }
+   ],
+   "followup": {
+    "q": "Why is a zip code better stored as text than as a number?",
+    "a": "A zip code is an identifier, not a quantity. As a number, leading zeros disappear (07030 becomes 7030), and a five-digit check would then fail on valid codes."
+   },
    "tool": "Excel"
   },
   {
@@ -240,6 +286,10 @@ window.BANK = {
    "steps": [
     "Put each column in a PivotTable row area, or use `=COUNTA(UNIQUE(Table1[EventAgency]))` for each column; only EventAgency returns 1."
    ],
+   "followup": {
+    "q": "What would you do with a column that has the same value in every row?",
+    "a": "Drop it from the analysis, because it carries no information, and reducing volume is good ETL practice. Document its value so nothing is lost."
+   },
    "tool": "Excel"
   },
   {
@@ -261,6 +311,10 @@ window.BANK = {
    "steps": [
     "`=MIN(Table1[EnteredOn])` formatted as date and time."
    ],
+   "followup": {
+    "q": "How does Excel store this date and time, and why does that matter?",
+    "a": "As a serial number: days since 0 January 1900, with the time of day as a fraction. That is why MIN works on dates and why subtracting two dates gives days."
+   },
    "tool": "Excel"
   },
   {
@@ -282,6 +336,10 @@ window.BANK = {
    "steps": [
     "`=MAX(Table1[EnteredOn])` formatted as date and time."
    ],
+   "followup": {
+    "q": "What would it tell you if the newest EnteredOn were much older than expected?",
+    "a": "The extract might be incomplete for recent periods. Compare it with the extraction date before drawing conclusions about recent activity."
+   },
    "tool": "Excel"
   },
   {
@@ -299,6 +357,10 @@ window.BANK = {
    "steps": [
     "`=COUNTA(UNIQUE(Table1[EventType]))`, or a PivotTable with EventType in rows."
    ],
+   "followup": {
+    "q": "Why use a PivotTable or UNIQUE rather than scrolling through the column?",
+    "a": "It is complete and repeatable: it catches rare values and spelling variants, and it can be refreshed when new data arrives."
+   },
    "tool": "Excel"
   },
   {
@@ -316,6 +378,10 @@ window.BANK = {
    "steps": [
     "PivotTable: EventType in rows, Count of EventID in values, sort descending."
    ],
+   "followup": {
+    "q": "Why do the later questions restrict the analysis to this event type?",
+    "a": "Different event types are different activities. Mixing them would compare shoots with load-ins and rigging, so the population must match the question."
+   },
    "tool": "Excel"
   },
   {
@@ -333,6 +399,10 @@ window.BANK = {
    "steps": [
     "PivotTable filtered on EventType = Shooting Permit, Category in rows, count, sort descending."
    ],
+   "followup": {
+    "q": "Could the answer change if you had not filtered on shooting permits first?",
+    "a": "Yes. The filter defines the population; other event types have their own category mix. A conclusion is only valid for the population you analysed."
+   },
    "tool": "Excel"
   },
   {
@@ -350,6 +420,20 @@ window.BANK = {
    "steps": [
     "`=COUNTIFS(Table1[EventType],\"Shooting Permit\",Table1[Category],\"Student\")`"
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 282.0,
+      "tol": 0
+     },
+     "hint": "You counted student permits of every event type. Filter on EventType = Shooting Permit first."
+    }
+   ],
+   "followup": {
+    "q": "Why COUNTIFS with two conditions rather than COUNTIF?",
+    "a": "Both conditions must hold: the permit is a shooting permit and the category is Student. COUNTIF on Category alone counts student permits of every event type (282)."
+   },
    "tool": "Excel"
   },
   {
@@ -368,6 +452,20 @@ window.BANK = {
     "Helper column: `=ISNUMBER(SEARCH(\",\",[@[CommunityBoard(s)]]))`.",
     "Share of TRUE among shooting permits: 2,249 / 28,680 = 7.84%."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "percent",
+      "value": 0.0743,
+      "tol": 0.0001
+     },
+     "hint": "That is the share across all event types. The question only covers shooting permits."
+    }
+   ],
+   "followup": {
+    "q": "Why does a comma in CommunityBoard(s) mean more than one board?",
+    "a": "Several values are stored in one cell, separated by commas, so a comma means at least two boards. It is the same multi-value-in-one-cell problem as in the ETL case."
+   },
    "tool": "Excel"
   },
   {
@@ -386,6 +484,20 @@ window.BANK = {
     "Helper column `=YEAR([@StartDateTime])`.",
     "PivotTable: year in rows, Borough in columns, count. Brooklyn 1,719 vs Manhattan 1,550 in 2017."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 2011.0,
+      "tol": 0
+     },
+     "hint": "You used the year of EnteredOn. The question asks for the year the shoot starts (StartDateTime)."
+    }
+   ],
+   "followup": {
+    "q": "Why assign shoots to a year by StartDateTime rather than EnteredOn?",
+    "a": "The question is about when shoots take place. EnteredOn is the application date, which can fall in the previous year for shoots in early January."
+   },
    "tool": "Excel"
   },
   {
@@ -403,6 +515,20 @@ window.BANK = {
     "Helper column `=ISNUMBER(SEARCH(\"BROADWAY\",[@ParkingHeld]))`.",
     "Share of TRUE among Manhattan shooting permits = 20%."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "percent",
+      "value": 0.09,
+      "tol": 0.005
+     },
+     "hint": "You divided by all shooting permits. The question asks for the share of Manhattan shoots only."
+    }
+   ],
+   "followup": {
+    "q": "What is a weakness of searching ParkingHeld for the word BROADWAY?",
+    "a": "It can include false positives (a street such as Broadway Terrace) and miss misspellings. A text search is a filter that you should spot-check."
+   },
    "tool": "Excel"
   },
   {
@@ -421,6 +547,10 @@ window.BANK = {
     "`=COUNTIFS(Table1[EventType],\"Shooting Permit\",Table1[EnteredOn],\">=\"&DATE(2013,1,1),Table1[Country],\"<>United States of America\")`",
     "United Kingdom 4, Panama 2, Canada 1."
    ],
+   "followup": {
+    "q": "Why is the date filter applied to EnteredOn here?",
+    "a": "The question is about applications submitted since 2013, and the application date is EnteredOn."
+   },
    "tool": "Excel"
   },
   {
@@ -439,6 +569,20 @@ window.BANK = {
     "Helper column `=([@EndDateTime]-[@StartDateTime])*24`. Excel stores dates as days, so multiply by 24.",
     "Average is 16.98 hours, which rounds to 17."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 0.71,
+      "tol": 0.01
+     },
+     "hint": "That is the average in days. Excel stores date-times as days, so multiply the difference by 24."
+    }
+   ],
+   "followup": {
+    "q": "Why do you multiply the difference by 24?",
+    "a": "Excel stores date-times as days, so End minus Start is in days. Multiplying by 24 converts days to hours."
+   },
    "tool": "Excel"
   },
   {
@@ -456,6 +600,20 @@ window.BANK = {
    "steps": [
     "Duration in minutes: `=([@EndDateTime]-[@StartDateTime])*24*60`, then MIN."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 0.0167,
+      "tol": 0.001
+     },
+     "hint": "That is the shortest shoot in hours. Multiply by 60 to get minutes."
+    }
+   ],
+   "followup": {
+    "q": "A one-minute shoot looks odd. What would you do with it?",
+    "a": "Treat it as a possible data-entry error: check whether it affects the results, report it and ask the data owner instead of silently deleting it."
+   },
    "tool": "Excel"
   },
   {
@@ -473,6 +631,20 @@ window.BANK = {
    "steps": [
     "Helper column `=[@StartDateTime]-[@EnteredOn]`, then AVERAGE (4.59 days, rounded to 5)."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 4.59,
+      "tol": 0.05
+     },
+     "hint": "Right calculation, but round to the nearest whole day."
+    }
+   ],
+   "followup": {
+    "q": "Could a lead time be negative, and what would that mean?",
+    "a": "Yes, if a permit was entered after the shoot started. That is either a late registration or a data error, and worth flagging as a control issue."
+   },
    "tool": "Excel"
   },
   {
@@ -491,6 +663,10 @@ window.BANK = {
    "steps": [
     "Helper column `=TEXT([@StartDateTime],\"dddd\")`, then a PivotTable count."
    ],
+   "followup": {
+    "q": "Why use TEXT(date, \"dddd\") rather than WEEKDAY?",
+    "a": "TEXT returns the day name directly, which reads well in a PivotTable. WEEKDAY returns a number whose meaning depends on its second argument."
+   },
    "tool": "Excel"
   },
   {
@@ -508,6 +684,20 @@ window.BANK = {
     "For each permit, list the weekdays between INT(start) and INT(end). One formula: `=SUMPRODUCT(--(WEEKDAY(ROW(INDIRECT(INT([@StartDateTime])&\":\"&INT([@EndDateTime]))),2)=5))>0`.",
     "Share of TRUE = 23.65%."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "percent",
+      "value": 0.1793,
+      "tol": 0.0001
+     },
+     "hint": "You only checked whether the shoot starts on a Friday. Shoots that start Thursday and run past midnight also include a Friday."
+    }
+   ],
+   "followup": {
+    "q": "Why is it not enough to check the day the shoot starts?",
+    "a": "Shoots can run past midnight or over several days. A Thursday-to-Friday shoot involves a Friday, so every calendar day from start to end has to be checked."
+   },
    "tool": "Excel"
   },
   {
@@ -525,6 +715,20 @@ window.BANK = {
    "steps": [
     "Data > Remove Duplicates on all columns removes the repeated Aptevo 2018 row: 22 rows become 21."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 22.0,
+      "tol": 0
+     },
+     "hint": "Nothing was removed. The Aptevo 2018 row appears twice; use Data > Remove Duplicates on all columns."
+    }
+   ],
+   "followup": {
+    "q": "How do you know the removed row was a duplicate and not a second legitimate record?",
+    "a": "Every field is identical, and a company has one balance sheet per year. Without a unique identifier it is still an assumption, so you document it."
+   },
    "tool": "Excel"
   },
   {
@@ -546,6 +750,10 @@ window.BANK = {
    "steps": [
     "Open the file in a text editor: `AAPL,Apple, Inc.,2016,...` has no quotes around the name, so the comma is read as a delimiter."
    ],
+   "followup": {
+    "q": "How would a text qualifier have prevented this problem?",
+    "a": "Double quotes around the name (\"Apple, Inc.\") tell the import that the comma is text. Alternatively use the pipe delimiter that the AICPA Audit Data Standards recommend."
+   },
    "tool": "Excel"
   },
   {
@@ -564,6 +772,20 @@ window.BANK = {
     "\"25900 M\" means 25,900 million.",
     "Formula idea: `=IF(RIGHT(A2)=\"M\",VALUE(LEFT(A2,LEN(A2)-2))*10^6,IF(RIGHT(A2)=\"K\",VALUE(LEFT(A2,LEN(A2)-2))*10^3,VALUE(A2)))`."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 25900.0,
+      "tol": 0
+     },
+     "hint": "That is still in millions. 25900 M means 25,900 × 1,000,000."
+    }
+   ],
+   "followup": {
+    "q": "Why must all values be in the same unit before analysis?",
+    "a": "Otherwise sums and comparisons are meaningless: 25900 would look smaller than 3,220,000,000 although it is about eight times larger."
+   },
    "tool": "Excel"
   },
   {
@@ -581,6 +803,10 @@ window.BANK = {
    "steps": [
     "AMZN, A M Z N and AM ZN. `SUBSTITUTE(A2,\" \",\"\")` makes them identical."
    ],
+   "followup": {
+    "q": "Why is an inconsistent ticker a problem?",
+    "a": "The ticker is the identifier. Three spellings split Amazon into three companies in pivots and lookups, so per-company totals are wrong."
+   },
    "tool": "Excel"
   },
   {
@@ -598,6 +824,28 @@ window.BANK = {
    "steps": [
     "9,700 K + 7,100 K + 30,600 K = 47,400,000. Without removing the duplicate you would get 78,000,000."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 78000000.0,
+      "tol": 0
+     },
+     "hint": "The duplicate Aptevo 2018 row is still in your data, so 2018 is counted twice."
+    },
+    {
+     "answer": {
+      "type": "number",
+      "value": 47400.0,
+      "tol": 0
+     },
+     "hint": "Those are still thousands (K). Multiply by 1,000."
+    }
+   ],
+   "followup": {
+    "q": "Which two transformations did you need?",
+    "a": "Remove the duplicate 2018 row and convert the K values to dollars. Both must be done before summing; doing only one gives a wrong total."
+   },
    "tool": "Excel"
   },
   {
@@ -618,6 +866,10 @@ window.BANK = {
    "steps": [
     "Filter Ticker on (Blanks)."
    ],
+   "followup": {
+    "q": "What would you do with rows without a ticker in a real engagement?",
+    "a": "Keep them, since the company name still identifies them. Fill in the ticker from a reliable source or ask the client, and document the change."
+   },
    "tool": "Excel"
   },
   {
@@ -637,6 +889,20 @@ window.BANK = {
     "Location `=LEFT(A2,3)`, EmpID `=MID(A2,4,4)`, PlantID `=MID(A2,FIND(\"-\",A2)+1,LEN(A2)-FIND(\"-\",A2)-1)`, PayPeriod `=RIGHT(A2,1)`.",
     "LocationPlantID `=D2&\"-\"&F2`, then `=COUNTA(UNIQUE(H2:H598))`."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 17.0,
+      "tol": 0
+     },
+     "hint": "You counted distinct PlantIDs. Plant numbers repeat across countries, so the identifier must combine Location and PlantID."
+    }
+   ],
+   "followup": {
+    "q": "Why is PlantID alone not a unique identifier?",
+    "a": "Every country numbers its plants from 10 upwards, so plant 12 exists in several countries. Only Location and PlantID together identify one plant."
+   },
    "tool": "Excel"
   },
   {
@@ -655,6 +921,20 @@ window.BANK = {
    "steps": [
     "`=COUNTIF(H2:H598,\"USA-12\")`"
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 40.0,
+      "tol": 0
+     },
+     "hint": "You counted plant 12 in every country. USA-12 means plant 12 in the USA only."
+    }
+   ],
+   "followup": {
+    "q": "Why build a combined LocationPlantID instead of filtering two columns?",
+    "a": "For one count both work, but a single key can be used directly in COUNTIF, lookups and PivotTables, and it is what the manager asked for."
+   },
    "tool": "Excel"
   },
   {
@@ -673,6 +953,20 @@ window.BANK = {
    "steps": [
     "`=COUNTIFS(D2:D598,\"GER\",G2:G598,\"W\")`"
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 66.0,
+      "tol": 0
+     },
+     "hint": "That is all German employees. Add the condition PayPeriod = W."
+    }
+   ],
+   "followup": {
+    "q": "Why extract PayPeriod into its own column instead of searching the code for W?",
+    "a": "A search for W could match other parts of a code. A separate field makes the filter exact and reusable."
+   },
    "tool": "Excel"
   },
   {
@@ -691,6 +985,10 @@ window.BANK = {
    "steps": [
     "Convert PlantID with VALUE, then MAX = 26, which occurs only in Mexico."
    ],
+   "followup": {
+    "q": "Why convert PlantID to a number before taking the maximum?",
+    "a": "Extracted with MID it is text. MAX ignores text, and text sorts character by character (\"9\" after \"26\"). VALUE makes the comparison numeric."
+   },
    "tool": "Excel"
   },
   {
@@ -709,6 +1007,20 @@ window.BANK = {
    "steps": [
     "`=COUNTIF(G2:G598,\"M\")`"
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 258.0,
+      "tol": 0
+     },
+     "hint": "That is the number of weekly-paid employees. Monthly is M."
+    }
+   ],
+   "followup": {
+    "q": "Text to Columns or formulas: which is better for a repeatable process?",
+    "a": "Formulas, because they recalculate when new data is pasted in. Text to Columns has to be redone by hand every time."
+   },
    "tool": "Excel"
   },
   {
@@ -730,6 +1042,10 @@ window.BANK = {
     "PlantID: the digits after the hyphen; PayPeriod: the letters after them.",
     "Count unique LocationPlantID values: 133."
    ],
+   "followup": {
+    "q": "Why can you not use fixed positions as in Case 2?",
+    "a": "Location is 2 to 6 letters and EmpID 1 to 3 digits, so the parts start at different positions. You have to locate the first digit and the hyphen in each code."
+   },
    "tool": "Excel"
   },
   {
@@ -748,6 +1064,20 @@ window.BANK = {
    "steps": [
     "Standardise PayPeriod with `=LEFT(pay,1)`, then COUNTIFS on Location = Japan and M."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 24.0,
+      "tol": 0
+     },
+     "hint": "You only counted M. Monthly pay is written as both M and Mo; standardise with LEFT(pay,1)."
+    }
+   ],
+   "followup": {
+    "q": "How did you treat M and Mo, and why is that allowed?",
+    "a": "The case states that both mean monthly, so standardising them to one value is a legitimate transformation, which you document."
+   },
    "tool": "Excel"
   },
   {
@@ -766,6 +1096,20 @@ window.BANK = {
    "steps": [
     "`=COUNTIF(A2:A598,\"*Mo\")`. Of the 339 monthly employees, 181 use Mo and 158 use M."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 158.0,
+      "tol": 0
+     },
+     "hint": "That counts the codes ending in plain M. The question asks for Mo."
+    }
+   ],
+   "followup": {
+    "q": "What does the mix of M and Mo tell you about the source system?",
+    "a": "The field is typed by hand without validation. Recommend a drop-down or validation rule so the data is clean at the source."
+   },
    "tool": "Excel"
   },
   {
@@ -784,6 +1128,20 @@ window.BANK = {
    "steps": [
     "COUNTIF on LocationPlantID = US-1. Watch out: a text-based match on \"US-1\" must not also count US-10, US-11, and so on."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 44.0,
+      "tol": 0
+     },
+     "hint": "Your match also counts US-10, US-11 and so on. Compare the whole LocationPlantID, not just its beginning."
+    }
+   ],
+   "followup": {
+    "q": "Why can a wildcard search for US-1 give a wrong count?",
+    "a": "US-1* also matches US-10 to US-17. You have to compare the complete identifier."
+   },
    "tool": "Excel"
   },
   {
@@ -802,6 +1160,10 @@ window.BANK = {
    "steps": [
     "`=SUM(VALUE(E2:E598))`. If any row was extracted wrongly, the sum will differ."
    ],
+   "followup": {
+    "q": "Why is a control total like the sum of EmpID useful?",
+    "a": "One wrongly extracted row changes the total, so you can confirm 597 extractions at once instead of inspecting every row."
+   },
    "tool": "Excel"
   },
   {
@@ -821,6 +1183,20 @@ window.BANK = {
     "`=IFERROR(INDEX(PreparerInfo!A:A,MATCH(1,(PreparerInfo!B:B=D2)*(PreparerInfo!C:C=C2),0)),\"no match\")` (array formula, or use XLOOKUP with two conditions).",
     "Count \"no match\": 148. Looking up on PreparerID alone would wrongly return a name for every line."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 0.0,
+      "tol": 0
+     },
+     "hint": "You matched on PreparerID alone. PreparerID restarts in every business unit, so only PreparerID and BusinessUnitID together identify a preparer."
+    }
+   ],
+   "followup": {
+    "q": "A VLOOKUP on PreparerID alone returns a name for every line. Why is that dangerous?",
+    "a": "It returns the first preparer with that ID, whatever the business unit. The result looks complete but attributes entries to the wrong person, which undermines segregation-of-duties testing."
+   },
    "tool": "Excel"
   },
   {
@@ -840,6 +1216,10 @@ window.BANK = {
     "PreparerName holds Name|Title. Take the name with `=TRIM(LEFT(name,FIND(\"|\",name)-1))`.",
     "PivotTable count: Carolyn Slater has 182 lines."
    ],
+   "followup": {
+    "q": "Why do systems such as GUESTSYS and POS appear as preparers, and why does it matter for audit?",
+    "a": "Entries recorded in a subsystem are posted automatically. Automated entries are tested through system controls, manual entries through individual testing, so you separate them."
+   },
    "tool": "Excel"
   },
   {
@@ -858,6 +1238,10 @@ window.BANK = {
    "steps": [
     "`=XLOOKUP(E2,Source!A:A,Source!B:B)` then COUNTIF."
    ],
+   "followup": {
+    "q": "Why INDEX/MATCH or XLOOKUP instead of VLOOKUP?",
+    "a": "They do not depend on the lookup column being leftmost or on a column number, so the formula survives inserted columns and can match on several conditions."
+   },
    "tool": "Excel"
   },
   {
@@ -876,6 +1260,10 @@ window.BANK = {
    "steps": [
     "Look up AccountClass from ChartOfAccounts via GLAccountNumber, then SUMIF."
    ],
+   "followup": {
+    "q": "Why look up AccountClass instead of choosing GL account numbers by hand?",
+    "a": "The chart of accounts is the authoritative mapping. Hand-picked account numbers miss new accounts and make the process unrepeatable."
+   },
    "tool": "Excel"
   },
   {
@@ -894,6 +1282,20 @@ window.BANK = {
    "steps": [
     "Revenue is mostly credits, so the sum is negative: -398,321.61."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 398321.61,
+      "tol": 0.01
+     },
+     "hint": "Right size, wrong sign. Revenue lines are credits, so their Amount is negative."
+    }
+   ],
+   "followup": {
+    "q": "Why is the revenue total negative?",
+    "a": "In this file credits are negative. Revenue normally carries a credit balance, so its amounts sum to a negative number."
+   },
    "tool": "Excel"
   },
   {
@@ -912,6 +1314,10 @@ window.BANK = {
    "steps": [
     "Look up BusinessUnit from BusinessUnits via BusinessUnitID, then COUNTIF."
    ],
+   "followup": {
+    "q": "Which join type does your lookup correspond to, and why is it the right one?",
+    "a": "A left join: every journal line is kept and the business unit is added where it matches. An inner join could drop unmatched lines without anyone noticing."
+   },
    "tool": "Excel"
   },
   {
@@ -929,6 +1335,20 @@ window.BANK = {
    "steps": [
     "`=SUM(JELineItems!H:H)`. Credits sum to -1,130,428.13, so total Amount is 0."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 0.0,
+      "tol": 0.01
+     },
+     "hint": "That is the sum of Amount (debits and credits cancel out). The question asks for the Debit column."
+    }
+   ],
+   "followup": {
+    "q": "Why is \"total Amount equals zero\" a useful check?",
+    "a": "In double-entry bookkeeping debits equal credits. If the total is not zero after loading, lines were lost or duplicated in the extract."
+   },
    "tool": "Excel"
   },
   {
@@ -947,6 +1367,20 @@ window.BANK = {
    "steps": [
     "Helper column `=[@Reg_Pay]+[@OT_Pay]`, then SUM."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 1072201.16,
+      "tol": 0.01
+     },
+     "hint": "That is regular pay only. Gross pay is Reg_Pay + OT_Pay."
+    }
+   ],
+   "followup": {
+    "q": "Why can you not compare 2015 Reg_Pay directly with 2016 Gross_Wages?",
+    "a": "The two systems define fields differently: Gross_Wages already includes overtime. You first build the same measure for 2015, Reg_Pay + OT_Pay."
+   },
    "tool": "Excel"
   },
   {
@@ -965,6 +1399,10 @@ window.BANK = {
    "steps": [
     "`=SUM(Gross_Wages)` in the 2016 data."
    ],
+   "followup": {
+    "q": "What would you check before trusting the 2016 total?",
+    "a": "Data quality in the new system: rows without employee numbers, invalid job codes and whether the file covers all six months."
+   },
    "tool": "Excel"
   },
   {
@@ -983,6 +1421,20 @@ window.BANK = {
    "steps": [
     "1,352,789.75 - 1,086,734.19 = 266,055.56: the roughly $266,000 the CFO noticed."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": -266055.56,
+      "tol": 0.01
+     },
+     "hint": "Right size, wrong direction. Take 2016 minus 2015, so an increase is positive."
+    }
+   ],
+   "followup": {
+    "q": "Before telling Noah why payroll rose, what could make this difference misleading?",
+    "a": "The system change: phantom entries, new job codes and a different level of aggregation. Part of the change may come from the data rather than the business."
+   },
    "tool": "Excel"
   },
   {
@@ -1002,6 +1454,10 @@ window.BANK = {
     "Job code `=MID([@Job],IF(ISNUMBER(VALUE(MID([@Job],3,1))),3,4),3)`.",
     "Compare against the jobcodes table with COUNTIF; 144 has no match."
    ],
+   "followup": {
+    "q": "What would you do with rows that have an invalid job code?",
+    "a": "Keep them in the totals but flag them and ask the client what they are. Deleting them would change total payroll without an explanation."
+   },
    "tool": "Excel"
   },
   {
@@ -1022,6 +1478,21 @@ window.BANK = {
     "PivotTables of gross wages by job code for each year, combined with XLOOKUP.",
     "009, 010, 011 and 012 only exist in 2016, so they are excluded. 006 (Service) rose by 23,128.33."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "text",
+      "accept": [
+       "009"
+      ]
+     },
+     "hint": "009 only has wages in 2016. The question asks for job codes with wages in both years."
+    }
+   ],
+   "followup": {
+    "q": "Why leave out job codes that only exist in 2016?",
+    "a": "A change needs a 2015 base. Codes such as 009 (the new foreign plant) are new activity and should be explained separately, not ranked as increases."
+   },
    "tool": "Excel"
   },
   {
@@ -1040,6 +1511,10 @@ window.BANK = {
    "steps": [
     "`=COUNTBLANK(Employee_Number column)`"
    ],
+   "followup": {
+    "q": "Which control weakness do the phantom entries point to?",
+    "a": "The new system accepts payroll lines without a valid employee number, so payments cannot be traced to a person: a fraud and accuracy risk."
+   },
    "tool": "Excel"
   },
   {
@@ -1058,6 +1533,10 @@ window.BANK = {
    "steps": [
     "`=SUMIFS(Gross_Wages,Employee_Number,\"\")`"
    ],
+   "followup": {
+    "q": "Is 32,951 material? How would you decide?",
+    "a": "Compare it with what Noah asked about: it is about 12% of the 266,000 increase, so it matters for the explanation even though it is small relative to total payroll."
+   },
    "tool": "Excel"
   },
   {
@@ -1076,6 +1555,20 @@ window.BANK = {
    "steps": [
     "PivotTable: Emp_No and name in rows, sum of OT_Pay, sorted descending. Cindy Lunt: 4,186.24 for 91.5 OT hours."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 91.5,
+      "tol": 0.01
+     },
+     "hint": "That is the number of overtime hours. The question asks for the overtime pay."
+    }
+   ],
+   "followup": {
+    "q": "Why aggregate by employee number rather than by name?",
+    "a": "Names are not unique and can be spelled differently. Emp_No is the stable identifier."
+   },
    "tool": "Excel"
   },
   {
@@ -1095,6 +1588,10 @@ window.BANK = {
    "steps": [
     "PivotTable on the extracted job code, sum of OT_Pay. 006 (Service): 6,007.52."
    ],
+   "followup": {
+    "q": "Noah wants to move employees between job codes to cut overtime. What else would you examine?",
+    "a": "Whether the overtime is concentrated in a few people rather than in the job code, and whether workload or staffing explains it. Moving people does not remove the work."
+   },
    "tool": "Excel"
   },
   {
@@ -1113,6 +1610,20 @@ window.BANK = {
    "steps": [
     "Sum the five columns over all 2016 rows, including phantom entries."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 1352789.75,
+      "tol": 0.01
+     },
+     "hint": "That is gross wages only. Add SocSec_Medicare, FUTA, SUTA and Work_Comp."
+    }
+   ],
+   "followup": {
+    "q": "Should the phantom entries be part of total employee cost?",
+    "a": "Yes, they were paid, so they are a cost. Report them separately because they are unexplained."
+   },
    "tool": "Excel"
   },
   {
@@ -1132,6 +1643,20 @@ window.BANK = {
     "PivotTable: employee name and Pay_Date in rows, sum of Reg_Hrs and OT_Hrs.",
     "Filter: Reg_Hrs < 40 and OT_Hrs > 0. 103 combinations; Cindy Lunt appears often."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 190.0,
+      "tol": 0
+     },
+     "hint": "You checked single rows. Each row is one job code, so first add up an employee's hours per pay date, then test the totals."
+    }
+   ],
+   "followup": {
+    "q": "Why add up hours per employee and pay date before testing?",
+    "a": "Each row is one job code. The 40-hour rule applies to total hours in the period, so it can only be tested on the employee's total."
+   },
    "tool": "Excel"
   },
   {
@@ -1151,6 +1676,20 @@ window.BANK = {
     "`=MONTH([@Pay_Date])`, PivotTable by month, average = 181,122.37.",
     "May: 221,517.17 - 181,122.37 = 40,394.81."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 221517.17,
+      "tol": 0.01
+     },
+     "hint": "That is May's total. The question asks how much May exceeds the six-month average."
+    }
+   ],
+   "followup": {
+    "q": "Why might May be higher than the other months?",
+    "a": "May may contain more pay dates than other months, or there was extra activity. Check the number of pay runs per month before concluding that wages rose."
+   },
    "tool": "Excel"
   },
   {
@@ -1170,6 +1709,10 @@ window.BANK = {
     "Build FirstName LastName for 2015; 2016 already has Employee_Name. XLOOKUP the location.",
     "Location 2, 2016: 768,848.06 / 21,567.25 = 35.65 (location 1: 30.84)."
    ],
+   "followup": {
+    "q": "Why include overtime hours in the denominator?",
+    "a": "Gross wages include overtime pay, so the hours must include overtime hours. Otherwise pay per hour is overstated."
+   },
    "tool": "Excel"
   },
   {
@@ -1187,6 +1730,10 @@ window.BANK = {
    "steps": [
     "`=SUM(salesData[netTotal])`"
    ],
+   "followup": {
+    "q": "Is this total the same as revenue in the income statement?",
+    "a": "No. netTotal is before tax and covers only menu items recorded in the POS data; other revenue and adjustments are not included."
+   },
    "tool": "Excel"
   },
   {
@@ -1205,6 +1752,20 @@ window.BANK = {
    "steps": [
     "`=COUNTA(UNIQUE(salesData[date]))`, or a PivotTable with date in rows."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 4610.0,
+      "tol": 0
+     },
+     "hint": "That is the number of rows in salesData. Each row is one menu item on one date; aggregate to dates first."
+    }
+   ],
+   "followup": {
+    "q": "Why aggregate before merging with the weather data?",
+    "a": "Weather has one row per date and sales one row per item per date. Merging first repeats the weather on every item row, so the analysis runs at the wrong level."
+   },
    "tool": "Excel"
   },
   {
@@ -1227,6 +1788,10 @@ window.BANK = {
    "steps": [
     "PivotTable by date, sum of netTotal, sort descending: 27 April 2018 with 7,033."
    ],
+   "followup": {
+    "q": "What would you check before treating 27 April as a normal day?",
+    "a": "Whether something special happened: an event, a large catering order or a data error. Outliers have a strong influence on regressions."
+   },
    "tool": "Excel"
   },
   {
@@ -1246,6 +1811,20 @@ window.BANK = {
     "Coefficients: intercept 1,359.16, netTotal_7 0.5858 (R² 0.378).",
     "Last date 31 Dec 2018 has sales 3,252, so the prediction is 1,359.16 + 0.5858 × 3,252 = 3,264.33."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 1498.58,
+      "tol": 1.0
+     },
+     "hint": "You used the last date's netTotal_7 as input. Seven days after the last date, the 7-day lag is the last date's own sales."
+    }
+   ],
+   "followup": {
+    "q": "How confident should Bob be in this prediction?",
+    "a": "Not very: R² is 0.38, so most of the day-to-day variation is unexplained, and a single past day is a noisy predictor. Present a range, not one number."
+   },
    "tool": "Excel"
   },
   {
@@ -1264,6 +1843,20 @@ window.BANK = {
    "steps": [
     "Each extra degree Fahrenheit is associated with about $7.58 more daily sales (p = 0.008, R² = 0.023): significant, but temperature explains little of the variation."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 0.47,
+      "tol": 0.01
+     },
+     "hint": "You ran the regression on item-level rows. Aggregate salesData to daily totals before merging the weather."
+    }
+   ],
+   "followup": {
+    "q": "The coefficient is significant but R² is only 0.02. How do you explain that to Bob?",
+    "a": "Warmer days really do sell slightly more, but temperature explains only 2% of the variation, so on its own it is useless for planning."
+   },
    "tool": "Excel"
   },
   {
@@ -1282,6 +1875,20 @@ window.BANK = {
    "steps": [
     "Game days have about $1,436 higher sales than other days (intercept 3,191.08, p < 0.001)."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 94.02,
+      "tol": 0.05
+     },
+     "hint": "You ran the regression on item-level rows. The question is about total daily sales, so aggregate to one row per date first."
+    }
+   ],
+   "followup": {
+    "q": "Does this prove that game days cause higher sales?",
+    "a": "Not on its own. Game days are autumn Saturdays, so the weekday or season may explain part of the difference. You would add those as control variables."
+   },
    "tool": "Excel"
   },
   {
@@ -1301,6 +1908,20 @@ window.BANK = {
     "Interaction column: `=gameDay*netTotal_364`.",
     "R² = 0.536. Neither gameDay (p = 0.63) nor the interaction (p = 0.95) is significant once last year's sales are included."
    ],
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 0.531,
+      "tol": 0.001
+     },
+     "hint": "That is the Adjusted R Square. The question asks for R Square, the row above it."
+    }
+   ],
+   "followup": {
+    "q": "The interaction is not significant. What do you tell Bob?",
+    "a": "There is no evidence that games boost sales more on days that were already busy. Last year's sales are the main predictor, and with only 13 game days the estimate is uncertain."
+   },
    "tool": "Excel"
   },
   {
@@ -1316,6 +1937,10 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*) FROM pragma_table_info('Customer');",
+   "followup": {
+    "q": "Why look at a table's structure before writing queries?",
+    "a": "To know the column names, data types and keys, so you join and filter on the right fields."
+   },
    "tool": "SQL"
   },
   {
@@ -1331,6 +1956,10 @@ window.BANK = {
     ]
    },
    "sql": "SELECT Country\nFROM Customer\nLIMIT 1 OFFSET 4;",
+   "followup": {
+    "q": "Why is \"the first 5 rows\" unreliable without ORDER BY?",
+    "a": "SQL tables have no guaranteed order. Without ORDER BY the database may return rows in a different order, so the result is not reproducible."
+   },
    "tool": "SQL"
   },
   {
@@ -1346,6 +1975,22 @@ window.BANK = {
     ]
    },
    "sql": "SELECT LastName\nFROM Customer\nORDER BY LastName\nLIMIT 1 OFFSET 2;",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "text",
+      "accept": [
+       "Brooks"
+      ]
+     },
+     "hint": "OFFSET counts rows to skip. The third row needs OFFSET 2.",
+     "sql": "SELECT LastName FROM Customer ORDER BY LastName LIMIT 1 OFFSET 3;"
+    }
+   ],
+   "followup": {
+    "q": "Why OFFSET 2 for the third row?",
+    "a": "OFFSET is the number of rows to skip. Skipping two rows leaves the third one."
+   },
    "tool": "SQL"
   },
   {
@@ -1361,6 +2006,10 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*) FROM Invoice;",
+   "followup": {
+    "q": "Why is COUNT(*) a good first query on a new table?",
+    "a": "It shows the volume and gives a control total to reconcile with the source system."
+   },
    "tool": "SQL"
   },
   {
@@ -1376,6 +2025,10 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM Invoice\nWHERE Total > 20;",
+   "followup": {
+    "q": "Why not >= 20?",
+    "a": "The question says greater than. Whether values exactly at the boundary are included must come from the wording."
+   },
    "tool": "SQL"
   },
   {
@@ -1391,6 +2044,10 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM Invoice\nWHERE Total > 10 AND Total < 20;",
+   "followup": {
+    "q": "BETWEEN 10 AND 20 gives the same result here. Why is it still wrong?",
+    "a": "BETWEEN includes both ends. It matches only because no invoice is exactly 10 or 20; on other data it would give a wrong count."
+   },
    "tool": "SQL"
   },
   {
@@ -1406,6 +2063,10 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM Invoice\nWHERE BillingCountry IN ('Brazil', 'Argentina', 'Chile');",
+   "followup": {
+    "q": "Why IN rather than three OR conditions?",
+    "a": "Same result, but IN is shorter and avoids errors when OR is combined with AND without brackets."
+   },
    "tool": "SQL"
   },
   {
@@ -1421,6 +2082,21 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM Invoice\nWHERE BillingCountry LIKE 'C%';",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 112.0,
+      "tol": 0
+     },
+     "hint": "'%C%' finds a C anywhere in the name. Starts with C is 'C%'.",
+     "sql": "SELECT COUNT(*) FROM Invoice WHERE BillingCountry LIKE '%C%';"
+    }
+   ],
+   "followup": {
+    "q": "What is the difference between 'C%' and '%C%'?",
+    "a": "'C%' means starts with C; '%C%' means contains a C anywhere."
+   },
    "tool": "SQL"
   },
   {
@@ -1436,6 +2112,21 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM Customer\nWHERE Company IS NOT NULL;",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 59.0,
+      "tol": 0
+     },
+     "hint": "That counts every customer. Customers without a company have NULL in Company; filter with IS NOT NULL.",
+     "sql": "SELECT COUNT(*) FROM Customer;"
+    }
+   ],
+   "followup": {
+    "q": "Why does Company = NULL not work?",
+    "a": "NULL means unknown, and any comparison with unknown is not true. You have to use IS NULL or IS NOT NULL."
+   },
    "tool": "SQL"
   },
   {
@@ -1451,6 +2142,10 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*) FROM Employee;",
+   "followup": {
+    "q": "The table is tiny. Why still count with SQL?",
+    "a": "The query documents how you got the number and can be rerun when the table grows or a reviewer checks your work."
+   },
    "tool": "SQL"
   },
   {
@@ -1466,6 +2161,10 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT MAX(LENGTH(LastName))\nFROM Employee;",
+   "followup": {
+    "q": "How can LENGTH help with data quality?",
+    "a": "It reveals values that are truncated, too long or padded with spaces, for example identifiers that should all have the same length."
+   },
    "tool": "SQL"
   },
   {
@@ -1481,6 +2180,21 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM Employee\nWHERE strftime('%w', BirthDate) = '0';  -- 0 = Sunday",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 1.0,
+      "tol": 0
+     },
+     "hint": "In SQLite strftime('%w') returns 0 for Sunday, not 1 (1 is Monday).",
+     "sql": "SELECT COUNT(*) FROM Employee WHERE strftime('%w', BirthDate) = '1';"
+    }
+   ],
+   "followup": {
+    "q": "How did you know which number SQLite uses for Sunday?",
+    "a": "From the documentation: strftime('%w') returns 0 for Sunday to 6 for Saturday. Systems differ (Excel's WEEKDAY uses 1 for Sunday by default), so you check."
+   },
    "tool": "SQL"
   },
   {
@@ -1496,6 +2210,10 @@ window.BANK = {
     "unit": "years"
    },
    "sql": "SELECT MAX((julianday(HireDate) - julianday(BirthDate)) / 365.25)\nFROM Employee;",
+   "followup": {
+    "q": "Why divide by 365.25?",
+    "a": "julianday gives a difference in days; 365.25 accounts for leap years when converting to years."
+   },
    "tool": "SQL"
   },
   {
@@ -1511,6 +2229,21 @@ window.BANK = {
     "unit": "USD"
    },
    "sql": "SELECT BillingCountry, ROUND(SUM(Total), 2) AS TotalValue\nFROM Invoice\nGROUP BY BillingCountry\nORDER BY TotalValue DESC;",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 91.0,
+      "tol": 0.01
+     },
+     "hint": "That is the number of invoices. The question asks for their total value: SUM(Total), not COUNT(*).",
+     "sql": "SELECT MAX(n) FROM (SELECT COUNT(*) AS n FROM Invoice GROUP BY BillingCountry);"
+    }
+   ],
+   "followup": {
+    "q": "Why group by BillingCountry rather than the customer's current country?",
+    "a": "The question is about invoices, and the invoice records where it was billed. A customer could have moved since."
+   },
    "tool": "SQL"
   },
   {
@@ -1526,6 +2259,10 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*) FROM InvoiceLine;",
+   "followup": {
+    "q": "What is the relationship between Invoice and InvoiceLine?",
+    "a": "One-to-many: one invoice has many lines, and InvoiceLine.InvoiceId is the foreign key to Invoice."
+   },
    "tool": "SQL"
   },
   {
@@ -1541,6 +2278,10 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(DISTINCT UnitPrice)\nFROM InvoiceLine;",
+   "followup": {
+    "q": "Why do COUNT and COUNT(DISTINCT) give different results here?",
+    "a": "COUNT counts rows; COUNT(DISTINCT) counts unique values, here the two price points."
+   },
    "tool": "SQL"
   },
   {
@@ -1556,6 +2297,10 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT SUM(Quantity)\nFROM InvoiceLine\nWHERE UnitPrice = 0.99;",
+   "followup": {
+    "q": "Why SUM(Quantity) rather than COUNT(*)?",
+    "a": "A line could have a quantity above 1. Here every quantity is 1, so both agree, but SUM is correct by definition."
+   },
    "tool": "SQL"
   },
   {
@@ -1571,6 +2316,21 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM (\n  SELECT TrackId, SUM(Quantity) AS Downloads\n  FROM InvoiceLine\n  GROUP BY TrackId\n  HAVING Downloads = 2\n);",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 1984.0,
+      "tol": 0
+     },
+     "hint": "That counts every track downloaded at least once. Keep only tracks whose total downloads equal 2 (HAVING).",
+     "sql": "SELECT COUNT(*) FROM (SELECT TrackId FROM InvoiceLine GROUP BY TrackId);"
+    }
+   ],
+   "followup": {
+    "q": "Why HAVING and not WHERE?",
+    "a": "WHERE filters rows before grouping. The number of downloads per track only exists after GROUP BY, so it is filtered with HAVING."
+   },
    "tool": "SQL"
   },
   {
@@ -1590,6 +2350,10 @@ window.BANK = {
     ]
    },
    "sql": "SELECT MAX(InvoiceDate) FROM Invoice;",
+   "followup": {
+    "q": "Why does MAX work on InvoiceDate in SQLite?",
+    "a": "The dates are stored as ISO text (YYYY-MM-DD), which sorts in date order. Dates stored as M/D/YYYY text would not."
+   },
    "tool": "SQL"
   },
   {
@@ -1605,6 +2369,10 @@ window.BANK = {
     ]
    },
    "sql": "SELECT g.Name, COUNT(*) AS Sold\nFROM InvoiceLine il\nJOIN Track t ON t.TrackId = il.TrackId\nJOIN Genre g ON g.GenreId = t.GenreId\nGROUP BY g.Name\nORDER BY Sold DESC;",
+   "followup": {
+    "q": "Why do you need two joins?",
+    "a": "InvoiceLine only has TrackId. The genre name is in Genre, which you reach through Track.GenreId."
+   },
    "tool": "SQL"
   },
   {
@@ -1620,6 +2388,21 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(DISTINCT t.AlbumId)\nFROM InvoiceLine il\nJOIN Track t ON t.TrackId = il.TrackId;",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 1984.0,
+      "tol": 0
+     },
+     "hint": "That counts distinct tracks. Join to Track and count distinct AlbumId.",
+     "sql": "SELECT COUNT(DISTINCT TrackId) FROM InvoiceLine;"
+    }
+   ],
+   "followup": {
+    "q": "Why COUNT(DISTINCT AlbumId)?",
+    "a": "An album appears once for every track sold from it. DISTINCT counts each album once."
+   },
    "tool": "SQL"
   },
   {
@@ -1635,6 +2418,10 @@ window.BANK = {
     ]
    },
    "sql": "SELECT e.FirstName || ' ' || e.LastName AS Rep, ROUND(SUM(i.Total), 2) AS Sales\nFROM Invoice i\nJOIN Customer c ON c.CustomerId = i.CustomerId\nJOIN Employee e ON e.EmployeeId = c.SupportRepId\nGROUP BY e.EmployeeId\nORDER BY Sales DESC;",
+   "followup": {
+    "q": "Which keys connect an invoice to an employee?",
+    "a": "Invoice.CustomerId to Customer, then Customer.SupportRepId to Employee.EmployeeId."
+   },
    "tool": "SQL"
   },
   {
@@ -1650,6 +2437,10 @@ window.BANK = {
     ]
    },
    "sql": "SELECT ar.Name, COUNT(*) AS Sold\nFROM InvoiceLine il\nJOIN Track t ON t.TrackId = il.TrackId\nJOIN Album al ON al.AlbumId = t.AlbumId\nJOIN Artist ar ON ar.ArtistId = al.ArtistId\nGROUP BY ar.ArtistId\nORDER BY Sold DESC;",
+   "followup": {
+    "q": "Why join through Album to reach Artist?",
+    "a": "Tracks belong to albums and albums to artists. The database is normalised, so each fact is stored once and you join to combine them."
+   },
    "tool": "SQL"
   },
   {
@@ -1665,6 +2456,10 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM Track\nWHERE TrackId NOT IN (SELECT TrackId FROM InvoiceLine);",
+   "followup": {
+    "q": "What is a risk with NOT IN, and how else could you write it?",
+    "a": "If the subquery returns a NULL, NOT IN returns no rows. A LEFT JOIN with WHERE il.TrackId IS NULL avoids that."
+   },
    "tool": "SQL"
   },
   {
@@ -1680,6 +2475,10 @@ window.BANK = {
     ]
    },
    "sql": "SELECT name, energy\nFROM songs\nORDER BY energy DESC\nLIMIT 1;",
+   "followup": {
+    "q": "What happens with LIMIT 1 if two songs tie?",
+    "a": "One is returned arbitrarily. Look at the top rows or compare with a subquery on MAX to detect ties."
+   },
    "tool": "SQL"
   },
   {
@@ -1696,6 +2495,10 @@ window.BANK = {
     ]
    },
    "sql": "SELECT name\nFROM songs\nORDER BY tempo DESC\nLIMIT 1;",
+   "followup": {
+    "q": "Why does DESC matter here?",
+    "a": "ORDER BY sorts ascending by default, so without DESC you would get the slowest song."
+   },
    "tool": "SQL"
   },
   {
@@ -1711,6 +2514,10 @@ window.BANK = {
     ]
    },
    "sql": "SELECT name\nFROM songs\nORDER BY duration_ms DESC\nLIMIT 1 OFFSET 2;",
+   "followup": {
+    "q": "How do you get the third longest song reliably?",
+    "a": "Sort by duration descending and skip two rows: LIMIT 1 OFFSET 2."
+   },
    "tool": "SQL"
   },
   {
@@ -1726,6 +2533,21 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM songs\nWHERE danceability > 0.6 AND energy > 0.6 AND valence > 0.6;",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 91.0,
+      "tol": 0
+     },
+     "hint": "With OR a song needs only one of the three. All three means AND.",
+     "sql": "SELECT COUNT(*) FROM songs WHERE danceability > 0.6 OR energy > 0.6 OR valence > 0.6;"
+    }
+   ],
+   "followup": {
+    "q": "Why AND rather than OR?",
+    "a": "All three conditions must hold. With OR a song needs to meet only one, which gives 91 songs."
+   },
    "tool": "SQL"
   },
   {
@@ -1741,6 +2563,10 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT ROUND(AVG(tempo), 2) FROM songs;",
+   "followup": {
+    "q": "Why round only at the end?",
+    "a": "Rounding in intermediate steps adds rounding error. Round the final figure for presentation."
+   },
    "tool": "SQL"
   },
   {
@@ -1756,6 +2582,10 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM songs\nWHERE artist_id = (SELECT id FROM artists WHERE name = 'Drake');",
+   "followup": {
+    "q": "Why not hard-code Drake's artist_id?",
+    "a": "IDs can differ between databases or versions. Looking up the name keeps the query correct and readable."
+   },
    "tool": "SQL"
   },
   {
@@ -1771,6 +2601,10 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT ROUND(AVG(s.energy), 4)\nFROM songs s\nJOIN artists a ON a.id = s.artist_id\nWHERE a.name = 'Post Malone';",
+   "followup": {
+    "q": "When is a JOIN better than a subquery?",
+    "a": "Both work here. A JOIN is clearer when you also want artist columns in the output; a subquery is simpler for a single filter."
+   },
    "tool": "SQL"
   },
   {
@@ -1786,6 +2620,10 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM songs\nWHERE name LIKE '%feat.%';",
+   "followup": {
+    "q": "What could LIKE '%feat.%' miss?",
+    "a": "Other spellings such as \"ft.\" or \"featuring\". A text filter's result should be spot-checked."
+   },
    "tool": "SQL"
   },
   {
@@ -1801,6 +2639,10 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM movies\nWHERE year = 2007;",
+   "followup": {
+    "q": "Is year a reliable column?",
+    "a": "It is IMDb's release year. It can be missing, or a planned future year, which matters for questions about recent movies."
+   },
    "tool": "SQL"
   },
   {
@@ -1816,6 +2658,10 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT birth\nFROM people\nWHERE name = 'Johnny Depp';",
+   "followup": {
+    "q": "What would you do if the query returned two Johnny Depps?",
+    "a": "Use another attribute, such as birth year or film credits, to identify the right person. Names are never safe identifiers."
+   },
    "tool": "SQL"
   },
   {
@@ -1831,6 +2677,21 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM movies\nWHERE year >= 2017;",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 50863.0,
+      "tol": 0
+     },
+     "hint": "> 2017 leaves out 2017 itself. Use >= 2017.",
+     "sql": "SELECT COUNT(*) FROM movies WHERE year > 2017;"
+    }
+   ],
+   "followup": {
+    "q": "Why can year be in the future?",
+    "a": "IMDb lists announced movies with their planned release year. The question explicitly includes them."
+   },
    "tool": "SQL"
   },
   {
@@ -1846,6 +2707,21 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM ratings\nWHERE rating > 9.0;",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 1890.0,
+      "tol": 0
+     },
+     "hint": ">= also counts movies rated exactly 9.0. The question says greater than 9.0.",
+     "sql": "SELECT COUNT(*) FROM ratings WHERE rating >= 9.0;"
+    }
+   ],
+   "followup": {
+    "q": "Why does the boundary at exactly 9.0 matter?",
+    "a": "Hundreds of movies are rated exactly 9.0. Greater than excludes them; including them gives 1,890."
+   },
    "tool": "SQL"
   },
   {
@@ -1861,6 +2737,10 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM movies\nWHERE title LIKE 'Toy Story%';",
+   "followup": {
+    "q": "\"Toy Story 3 in Real Life\" is in your result. Is that a problem?",
+    "a": "Not for this question: the stated rule counts every title starting with Toy Story. It shows how a rule-based filter can include records a human would exclude."
+   },
    "tool": "SQL"
   },
   {
@@ -1876,6 +2756,10 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT ROUND(AVG(r.rating), 3)\nFROM ratings r\nJOIN movies m ON m.id = r.movie_id\nWHERE m.year = 2013;",
+   "followup": {
+    "q": "Why join ratings to movies?",
+    "a": "The year is in movies and the rating in ratings. The join filters the ratings to 2013 movies."
+   },
    "tool": "SQL"
   },
   {
@@ -1891,6 +2775,21 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM movies m\nJOIN ratings r ON r.movie_id = m.id\nWHERE m.year = 2011;",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 12672.0,
+      "tol": 0
+     },
+     "hint": "That counts all 2011 movies. Join to ratings so only movies with a rating remain.",
+     "sql": "SELECT COUNT(*) FROM movies WHERE year = 2011;"
+    }
+   ],
+   "followup": {
+    "q": "Why does the join reduce the number of 2011 movies?",
+    "a": "An inner join keeps only movies with a rating, which is exactly what the question asks."
+   },
    "tool": "SQL"
   },
   {
@@ -1906,6 +2805,10 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM stars st\nJOIN movies m ON m.id = st.movie_id\nWHERE m.title = 'Harry Potter and the Sorcerer''s Stone';",
+   "followup": {
+    "q": "Why does the title need two apostrophes in SQL?",
+    "a": "A single quote ends a text value, so a quote inside the text is escaped by doubling it."
+   },
    "tool": "SQL"
   },
   {
@@ -1921,6 +2824,21 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(DISTINCT st.person_id)\nFROM stars st\nJOIN movies m ON m.id = st.movie_id\nWHERE m.year = 2003;",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 19324.0,
+      "tol": 0
+     },
+     "hint": "People who starred in several 2003 movies are counted more than once. Use COUNT(DISTINCT ...).",
+     "sql": "SELECT COUNT(st.person_id) FROM stars st JOIN movies m ON m.id = st.movie_id WHERE m.year = 2003;"
+    }
+   ],
+   "followup": {
+    "q": "Why DISTINCT here?",
+    "a": "A person who starred in several 2003 movies would otherwise be counted once per movie."
+   },
    "tool": "SQL"
   },
   {
@@ -1936,6 +2854,21 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(DISTINCT d.person_id)\nFROM directors d\nJOIN ratings r ON r.movie_id = d.movie_id\nWHERE r.rating >= 8.0;",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 16714.0,
+      "tol": 0
+     },
+     "hint": "Directors with several highly rated movies are counted more than once. Use COUNT(DISTINCT ...).",
+     "sql": "SELECT COUNT(d.person_id) FROM directors d JOIN ratings r ON r.movie_id = d.movie_id WHERE r.rating >= 8.0;"
+    }
+   ],
+   "followup": {
+    "q": "Why is directors a separate table?",
+    "a": "A movie can have several directors and a person can direct several movies: a many-to-many relationship needs a linking table."
+   },
    "tool": "SQL"
   },
   {
@@ -1951,6 +2884,10 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT MAX(r.rating)\nFROM stars st\nJOIN people p ON p.id = st.person_id\nJOIN ratings r ON r.movie_id = st.movie_id\nWHERE p.name = 'Helena Bonham Carter';",
+   "followup": {
+    "q": "Two movies share the top rating. How would you list both?",
+    "a": "Filter with WHERE rating = (SELECT MAX(...)) instead of LIMIT 1, which would hide the tie."
+   },
    "tool": "SQL"
   },
   {
@@ -1966,6 +2903,10 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM movies\nWHERE id IN (SELECT movie_id FROM stars WHERE person_id =\n             (SELECT id FROM people WHERE name = 'Johnny Depp'))\n  AND id IN (SELECT movie_id FROM stars WHERE person_id =\n             (SELECT id FROM people WHERE name = 'Helena Bonham Carter'));",
+   "followup": {
+    "q": "Why not WHERE name = 'Johnny Depp' AND name = 'Helena Bonham Carter'?",
+    "a": "One row cannot hold two names at once. You need the set of movies for each person and their intersection."
+   },
    "tool": "SQL"
   },
   {
@@ -1981,6 +2922,21 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(DISTINCT person_id)\nFROM stars\nWHERE movie_id IN (\n    SELECT movie_id FROM stars\n    WHERE person_id = (SELECT id FROM people WHERE name = 'Kevin Bacon' AND birth = 1958))\n  AND person_id <> (SELECT id FROM people WHERE name = 'Kevin Bacon' AND birth = 1958);",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 177.0,
+      "tol": 0
+     },
+     "hint": "Kevin Bacon himself is still in your count. Exclude his id.",
+     "sql": "SELECT COUNT(DISTINCT person_id) FROM stars WHERE movie_id IN (SELECT movie_id FROM stars WHERE person_id = (SELECT id FROM people WHERE name = 'Kevin Bacon' AND birth = 1958));"
+    }
+   ],
+   "followup": {
+    "q": "Why the condition birth = 1958?",
+    "a": "Several people are named Kevin Bacon. The birth year identifies the right one."
+   },
    "tool": "SQL"
   },
   {
@@ -1997,6 +2953,10 @@ window.BANK = {
     ]
    },
    "sql": "SELECT p.name\nFROM people p\nWHERE p.license_plate IN (       -- left the courthouse lot 10:15 to 10:25\n      SELECT license_plate FROM courthouse_security_logs\n      WHERE year = 2020 AND month = 7 AND day = 28\n        AND hour = 10 AND minute BETWEEN 15 AND 25 AND activity = 'exit')\n  AND p.id IN (                  -- withdrew money on Fifer Street that morning\n      SELECT ba.person_id FROM bank_accounts ba\n      JOIN atm_transactions a ON a.account_number = ba.account_number\n      WHERE a.year = 2020 AND a.month = 7 AND a.day = 28\n        AND a.atm_location = 'Fifer Street' AND a.transaction_type = 'withdraw')\n  AND p.phone_number IN (        -- made a call shorter than a minute\n      SELECT caller FROM phone_calls\n      WHERE year = 2020 AND month = 7 AND day = 28 AND duration < 60)\n  AND p.passport_number IN (     -- on the earliest flight out the next day\n      SELECT passport_number FROM passengers WHERE flight_id = (\n        SELECT f.id FROM flights f\n        JOIN airports a ON a.id = f.origin_airport_id\n        WHERE a.city = 'Fiftyville' AND f.year = 2020 AND f.month = 7 AND f.day = 29\n        ORDER BY f.hour, f.minute LIMIT 1));",
+   "followup": {
+    "q": "Walk me through how each clue narrowed down the suspects.",
+    "a": "The interviews give four clues: leaving the courthouse lot 10:15 to 10:25, withdrawing at the Fifer Street ATM, a call under one minute, and the earliest flight the next morning. Each clue is a subquery; only Ernest satisfies all four."
+   },
    "tool": "SQL"
   },
   {
@@ -2013,6 +2973,10 @@ window.BANK = {
     ]
    },
    "sql": "SELECT d.city\nFROM flights f\nJOIN airports o ON o.id = f.origin_airport_id\nJOIN airports d ON d.id = f.destination_airport_id\nWHERE o.city = 'Fiftyville' AND f.year = 2020 AND f.month = 7 AND f.day = 29\nORDER BY f.hour, f.minute\nLIMIT 1;",
+   "followup": {
+    "q": "Why order by hour and minute?",
+    "a": "The flights table stores the time in separate columns, so you sort on both to find the first departure on 29 July."
+   },
    "tool": "SQL"
   },
   {
@@ -2029,6 +2993,10 @@ window.BANK = {
     ]
    },
    "sql": "SELECT r.name\nFROM phone_calls pc\nJOIN people t ON t.phone_number = pc.caller\nJOIN people r ON r.phone_number = pc.receiver\nWHERE t.name = 'Ernest'\n  AND pc.year = 2020 AND pc.month = 7 AND pc.day = 28 AND pc.duration < 60;",
+   "followup": {
+    "q": "How do you know who was on the other end of the call?",
+    "a": "The thief was the caller. Joining the receiver's phone number back to people gives the accomplice."
+   },
    "tool": "SQL"
   },
   {
@@ -2045,6 +3013,10 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*) AS TotalTrans\nFROM pcards;",
+   "followup": {
+    "q": "Why is this total a useful starting point in an audit?",
+    "a": "It is a control total: reconcile it with the source system to confirm the data is complete before testing."
+   },
    "tool": "SQL"
   },
   {
@@ -2061,6 +3033,21 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*) AS TotalTransGT5k\nFROM pcards\nWHERE Amount >= 5000;",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 1098.0,
+      "tol": 0
+     },
+     "hint": "> 5000 leaves out transactions of exactly $5,000. The question says 5,000 or more.",
+     "sql": "SELECT COUNT(*) FROM pcards WHERE Amount > 5000;"
+    }
+   ],
+   "followup": {
+    "q": "The control limit is $5,000. Why does this question use >= ?",
+    "a": "It defines the population as 5,000 or more. The control test itself (S-63) uses > 5,000, because exactly $5,000 is allowed."
+   },
    "tool": "SQL"
   },
   {
@@ -2077,6 +3064,30 @@ window.BANK = {
     "unit": "USD"
    },
    "sql": "SELECT ROUND(SUM(Amount), 2) AS TotalReturns2014Q1\nFROM pcards\nWHERE Year = 2014 AND Month BETWEEN 1 AND 3 AND Amount < 0;",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 157882.08,
+      "tol": 0.01
+     },
+     "hint": "Right size, but returns are negative amounts. Keep the sign.",
+     "sql": "SELECT ROUND(-SUM(Amount),2) FROM pcards WHERE Year = 2014 AND Month BETWEEN 1 AND 3 AND Amount < 0;"
+    },
+    {
+     "answer": {
+      "type": "number",
+      "value": -629445.26,
+      "tol": 0.01
+     },
+     "hint": "That is the total for all of 2014. Limit to months 1 to 3.",
+     "sql": "SELECT ROUND(SUM(Amount),2) FROM pcards WHERE Year = 2014 AND Amount < 0;"
+    }
+   ],
+   "followup": {
+    "q": "Why are returns negative, and why keep the sign?",
+    "a": "Refunds reduce spending, so they are recorded as negative amounts. Keeping the sign shows that the figure is a reduction."
+   },
    "tool": "SQL"
   },
   {
@@ -2093,6 +3104,10 @@ window.BANK = {
     ]
    },
    "sql": "SELECT FullName, COUNT(*) AS NumTrans\nFROM pcards\nWHERE Year = 2014\nGROUP BY FullName\nORDER BY NumTrans DESC;",
+   "followup": {
+    "q": "Why can grouping on FullName be risky?",
+    "a": "Names are not unique identifiers and capitalisation varies (C STOVER and C Stover), so one person can be split or two people merged."
+   },
    "tool": "SQL"
   },
   {
@@ -2109,6 +3124,21 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM (\n  SELECT FullName\n  FROM pcards\n  WHERE Year = 2014\n  GROUP BY FullName\n  HAVING COUNT(*) > 10\n);",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 1541.0,
+      "tol": 0
+     },
+     "hint": ">= 10 includes cardholders with exactly 10. The question says more than 10.",
+     "sql": "SELECT COUNT(*) FROM (SELECT FullName FROM pcards WHERE Year = 2014 GROUP BY FullName HAVING COUNT(*) >= 10);"
+    }
+   ],
+   "followup": {
+    "q": "Why HAVING COUNT(*) > 10 and not WHERE?",
+    "a": "The count only exists after grouping, so it is filtered with HAVING."
+   },
    "tool": "SQL"
   },
   {
@@ -2125,6 +3155,21 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM (\n  SELECT FullName, SUM(Amount) AS ReturnedGoodsValue\n  FROM pcards\n  WHERE Year = 2014 AND Amount < 0\n  GROUP BY FullName\n  HAVING SUM(Amount) < -1000   -- returns are negative\n);",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 906.0,
+      "tol": 0
+     },
+     "hint": "Returns are negative, so 'more than $1,000 returned' means SUM(Amount) < -1000. Your condition kept the small returners.",
+     "sql": "SELECT COUNT(*) FROM (SELECT FullName FROM pcards WHERE Year = 2014 AND Amount < 0 GROUP BY FullName HAVING SUM(Amount) > -1000);"
+    }
+   ],
+   "followup": {
+    "q": "Why is the condition SUM(Amount) < -1000?",
+    "a": "Returns are negative, so returning more than $1,000 means a sum below -1,000."
+   },
    "tool": "SQL"
   },
   {
@@ -2141,6 +3186,10 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM pcards\nWHERE Year = 2014 AND Amount > 3000 AND Vendor LIKE '%amazon%';",
+   "followup": {
+    "q": "Why LIKE '%amazon%' and not Vendor = 'Amazon.com'?",
+    "a": "Amazon appears under several vendor names, such as Amazon.com and AMAZON MKTPLACE PMTS, and the question says Amazon anywhere in the name."
+   },
    "tool": "SQL"
   },
   {
@@ -2157,6 +3206,21 @@ window.BANK = {
     "unit": "USD"
    },
    "sql": "SELECT ROUND(SUM(Amount) * 0.045, 2) AS SalesTaxSaved\nFROM pcards\nWHERE Year = 2014;",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 7398572.59,
+      "tol": 0.01
+     },
+     "hint": "That is the tax saved over all years. Filter on Year = 2014.",
+     "sql": "SELECT ROUND(SUM(Amount) * 0.045, 2) FROM pcards;"
+    }
+   ],
+   "followup": {
+    "q": "Why is the tax avoided only an estimate?",
+    "a": "It assumes every purchase would have been taxed in Oklahoma. Out-of-state purchases and exempt items would not have been."
+   },
    "tool": "SQL"
   },
   {
@@ -2173,6 +3237,21 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT RiskRanking, COUNT(*)\nFROM (\n  SELECT CASE WHEN Amount <= -1000 THEN 'High'\n              WHEN Amount <= -500  THEN 'Medium'\n              ELSE 'Low' END AS RiskRanking\n  FROM pcards\n  WHERE Year = 2014 AND Amount < 0\n)\nGROUP BY RiskRanking\nORDER BY RiskRanking;   -- High comes first",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 113.0,
+      "tol": 0
+     },
+     "hint": "Strictly less than -1000 leaves out returns of exactly $1,000. High risk is $1,000 or more: Amount <= -1000.",
+     "sql": "SELECT COUNT(*) FROM pcards WHERE Year = 2014 AND Amount < 0 AND Amount < -1000;"
+    }
+   ],
+   "followup": {
+    "q": "How do you translate \"$1,000 or more\" into a condition on negative returns?",
+    "a": "Amount <= -1000. A larger return is a more negative number, so the comparison flips."
+   },
    "tool": "SQL"
   },
   {
@@ -2189,6 +3268,21 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM pcards\nWHERE Year = 2014\n  AND Amount > (SELECT AVG(Amount) FROM pcards WHERE Year = 2014);",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 25900.0,
+      "tol": 0
+     },
+     "hint": "Your average covers all years. The subquery also needs WHERE Year = 2014.",
+     "sql": "SELECT COUNT(*) FROM pcards WHERE Year = 2014 AND Amount > (SELECT AVG(Amount) FROM pcards);"
+    }
+   ],
+   "followup": {
+    "q": "Why does the subquery also need WHERE Year = 2014?",
+    "a": "You compare with the 2014 average. Without the filter the average covers all years."
+   },
    "tool": "SQL"
   },
   {
@@ -2205,6 +3299,10 @@ window.BANK = {
     ]
    },
    "sql": "WITH s13 AS (SELECT Vendor, SUM(Amount) AS s FROM pcards WHERE Year = 2013 GROUP BY Vendor),\n     s14 AS (SELECT Vendor, SUM(Amount) AS s FROM pcards WHERE Year = 2014 GROUP BY Vendor)\nSELECT s14.Vendor, ROUND(s14.s - s13.s, 2) AS DiffSpending\nFROM s14 JOIN s13 ON s13.Vendor = s14.Vendor\nORDER BY DiffSpending DESC;",
+   "followup": {
+    "q": "Why join two yearly subqueries rather than use one GROUP BY?",
+    "a": "Each vendor needs its 2013 and 2014 totals side by side, and the inner join keeps only vendors with purchases in both years."
+   },
    "tool": "SQL"
   },
   {
@@ -2221,6 +3319,21 @@ window.BANK = {
     "unit": "%"
    },
    "sql": "SELECT Year,\n       ROUND((COUNT(*) - (SELECT COUNT(*) FROM pcards WHERE Year = 2011)) * 100.0\n             / (SELECT COUNT(*) FROM pcards WHERE Year = 2011), 2) AS PercDiffFrom2011\nFROM pcards\nWHERE Year = 2014\nGROUP BY Year;",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 412.21,
+      "tol": 0.005
+     },
+     "hint": "You compared with 2010, which only has a few months of data. The question uses 2011 as the base.",
+     "sql": "SELECT ROUND((COUNT(*) - (SELECT COUNT(*) FROM pcards WHERE Year = 2010)) * 100.0 / (SELECT COUNT(*) FROM pcards WHERE Year = 2010), 2) FROM pcards WHERE Year = 2014;"
+    }
+   ],
+   "followup": {
+    "q": "Why multiply by 100.0 rather than 100?",
+    "a": "With whole numbers SQLite does integer division, which cuts off the decimals. 100.0 forces a decimal result."
+   },
    "tool": "SQL"
   },
   {
@@ -2237,6 +3350,21 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM (\n  SELECT FullName, SUM(Amount) AS TotalSpent\n  FROM pcards\n  WHERE Year = 2014\n  GROUP BY FullName\n  HAVING SUM(Amount) > 50000\n);",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 130.0,
+      "tol": 0
+     },
+     "hint": "You merged names that differ only in capitalisation. That is defensible, but this question asks for FullName as stored.",
+     "sql": "SELECT COUNT(*) FROM (SELECT UPPER(FullName) FROM pcards WHERE Year = 2014 GROUP BY UPPER(FullName) HAVING SUM(Amount) > 50000);"
+    }
+   ],
+   "followup": {
+    "q": "Is spending above $50,000 automatically a control violation?",
+    "a": "No. Some cards may have approved higher limits. These are exceptions to investigate, not proven violations."
+   },
    "tool": "SQL"
   },
   {
@@ -2253,6 +3381,21 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM (\n  SELECT FullName, Month, SUM(Amount) AS MonthTotal\n  FROM pcards\n  WHERE Year = 2014\n  GROUP BY FullName, Month\n  HAVING SUM(Amount) > 10000\n);",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 12.0,
+      "tol": 0
+     },
+     "hint": "You grouped by month only. The control is per cardholder per month: GROUP BY FullName, Month.",
+     "sql": "SELECT COUNT(*) FROM (SELECT Month FROM pcards WHERE Year = 2014 GROUP BY Month HAVING SUM(Amount) > 10000);"
+    }
+   ],
+   "followup": {
+    "q": "Why GROUP BY FullName, Month and not just Month?",
+    "a": "The control applies per cardholder per month. Grouping by month alone measures the whole university."
+   },
    "tool": "SQL"
   },
   {
@@ -2269,6 +3412,21 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM pcards\nWHERE Year = 2014 AND Amount > 5000;",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 53.0,
+      "tol": 0
+     },
+     "hint": ">= also counts transactions of exactly $5,000, which the control allows.",
+     "sql": "SELECT COUNT(*) FROM pcards WHERE Year = 2014 AND Amount >= 5000;"
+    }
+   ],
+   "followup": {
+    "q": "Why > 5000 and not >= 5000?",
+    "a": "The policy forbids spending more than $5,000 per transaction, so exactly $5,000 is allowed."
+   },
    "tool": "SQL"
   },
   {
@@ -2285,6 +3443,30 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM pcards\nWHERE Year = 2014\n  AND (FullName, Vendor, TransactionDate) IN (\n      SELECT FullName, Vendor, TransactionDate\n      FROM pcards\n      WHERE Year = 2014\n      GROUP BY FullName, Vendor, TransactionDate\n      HAVING COUNT(*) > 1 AND SUM(Amount) > 5000);",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 66.0,
+      "tol": 0
+     },
+     "hint": "That is the number of groups. The question asks for the transaction lines inside those groups.",
+     "sql": "SELECT COUNT(*) FROM (SELECT 1 FROM pcards WHERE Year = 2014 GROUP BY FullName, Vendor, TransactionDate HAVING COUNT(*) > 1 AND SUM(Amount) > 5000);"
+    },
+    {
+     "answer": {
+      "type": "number",
+      "value": 285.0,
+      "tol": 0
+     },
+     "hint": "Without COUNT(*) > 1 you also include single transactions over $5,000. A split needs at least two swipes.",
+     "sql": "SELECT COUNT(*) FROM pcards WHERE Year = 2014 AND (FullName, Vendor, TransactionDate) IN (SELECT FullName, Vendor, TransactionDate FROM pcards WHERE Year = 2014 GROUP BY FullName, Vendor, TransactionDate HAVING SUM(Amount) > 5000);"
+    }
+   ],
+   "followup": {
+    "q": "Why require COUNT(*) > 1?",
+    "a": "A split purchase needs at least two swipes. A single transaction over $5,000 is a different violation, tested in S-63."
+   },
    "tool": "SQL"
   },
   {
@@ -2301,6 +3483,21 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM pcards\nWHERE Year = 2014\n  AND (Vendor, TransactionDate) IN (\n      SELECT Vendor, TransactionDate\n      FROM pcards\n      WHERE Year = 2014\n      GROUP BY Vendor, TransactionDate\n      HAVING COUNT(DISTINCT FullName) = 2 AND SUM(Amount) > 5000);",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 47.0,
+      "tol": 0
+     },
+     "hint": "That is the number of vendor-day groups. Count the transaction lines inside them.",
+     "sql": "SELECT COUNT(*) FROM (SELECT 1 FROM pcards WHERE Year = 2014 GROUP BY Vendor, TransactionDate HAVING COUNT(DISTINCT FullName) = 2 AND SUM(Amount) > 5000);"
+    }
+   ],
+   "followup": {
+    "q": "What would be a false positive in this test, and how would you check it?",
+    "a": "Two colleagues buying from a large vendor on the same day for unrelated needs. Check receipts and business purpose before calling it a split."
+   },
    "tool": "SQL"
   },
   {
@@ -2317,6 +3514,21 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM pcards\nWHERE Year = 2014\n  AND (FullName, TransactionDate) IN (\n      SELECT FullName, TransactionDate\n      FROM pcards\n      WHERE Year = 2014\n      GROUP BY FullName, TransactionDate\n      HAVING COUNT(DISTINCT Vendor) = 2 AND SUM(Amount) > 5000);",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 71.0,
+      "tol": 0
+     },
+     "hint": "That is the number of cardholder-day groups. Count the transaction lines inside them.",
+     "sql": "SELECT COUNT(*) FROM (SELECT 1 FROM pcards WHERE Year = 2014 GROUP BY FullName, TransactionDate HAVING COUNT(DISTINCT Vendor) = 2 AND SUM(Amount) > 5000);"
+    }
+   ],
+   "followup": {
+    "q": "Why is a split between vendors harder to prove than a split between swipes?",
+    "a": "Different vendors usually means different goods. You need receipts showing that one known need was divided to stay under the limit."
+   },
    "tool": "SQL"
   },
   {
@@ -2333,6 +3545,21 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM pcards\nWHERE Year = 2014\n  AND (MCC LIKE '%food%' OR MCC LIKE '%restaurant%')\n  AND (FullName, TransactionDate) IN (\n      SELECT FullName, TransactionDate\n      FROM pcards\n      WHERE Year = 2014\n        AND (MCC LIKE '%hotel%' OR MCC LIKE '%motel%'\n             OR MCC LIKE '%resort%' OR MCC LIKE '%inn%'));",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 4598.0,
+      "tol": 0
+     },
+     "hint": "That counts all food and restaurant purchases. Only those on the same day as a hotel purchase by the same cardholder are suspicious.",
+     "sql": "SELECT COUNT(*) FROM pcards WHERE Year = 2014 AND (MCC LIKE '%food%' OR MCC LIKE '%restaurant%');"
+    }
+   ],
+   "followup": {
+    "q": "Why look for food purchases on the same day as a hotel purchase?",
+    "a": "A hotel purchase indicates travel status, and food while travelling must be claimed through the per diem, not the P-card."
+   },
    "tool": "SQL"
   },
   {
@@ -2349,6 +3576,21 @@ window.BANK = {
     "unit": "%"
    },
    "sql": "SELECT SUBSTR(CAST(Amount AS TEXT), 1, 1) AS FirstDigit,\n       ROUND(COUNT(*) * 100.0 /\n             (SELECT COUNT(*) FROM pcards WHERE Year = 2014 AND Amount >= 1), 3) AS Pct\nFROM pcards\nWHERE Year = 2014 AND Amount >= 1\nGROUP BY FirstDigit\nORDER BY FirstDigit;   -- Benford expects 30.1% for digit 1",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 28.538,
+      "tol": 0.001
+     },
+     "hint": "Your denominator includes returns and amounts under $1. Benford's analysis uses amounts of $1.00 or more only.",
+     "sql": "SELECT ROUND(SUM(SUBSTR(CAST(Amount AS TEXT),1,1)='1') * 100.0 / COUNT(*), 3) FROM pcards WHERE Year = 2014;"
+    }
+   ],
+   "followup": {
+    "q": "Benford's law expects 30.1% for digit 1 and you found 29.5%. What do you conclude?",
+    "a": "The distribution is close to Benford, so there is no sign of widespread manipulation. Benford's law is a risk indicator, not proof; look closer at the digits that deviate most."
+   },
    "tool": "SQL"
   },
   {
@@ -2365,6 +3607,21 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM pcards\nWHERE Year = 2014 AND Amount > 0\n  AND (FullName, Vendor, TransactionDate, Amount) IN (\n      SELECT FullName, Vendor, TransactionDate, Amount\n      FROM pcards\n      WHERE Year = 2014 AND Amount > 0\n      GROUP BY FullName, Vendor, TransactionDate, Amount\n      HAVING COUNT(*) > 1);",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 1732.0,
+      "tol": 0
+     },
+     "hint": "That is the number of duplicate groups. Count every transaction line in them.",
+     "sql": "SELECT COUNT(*) FROM (SELECT 1 FROM pcards WHERE Year = 2014 AND Amount > 0 GROUP BY FullName, Vendor, TransactionDate, Amount HAVING COUNT(*) > 1);"
+    }
+   ],
+   "followup": {
+    "q": "Why are these only possible duplicates?",
+    "a": "Buying the same item twice on one day can be legitimate. They are candidates to check against receipts and bank statements."
+   },
    "tool": "SQL"
   },
   {
@@ -2381,6 +3638,10 @@ window.BANK = {
     ]
    },
    "sql": "SELECT FullName, COUNT(*) AS DuplicateGroups\nFROM (\n  SELECT FullName, Vendor, TransactionDate, Amount\n  FROM pcards\n  WHERE Year = 2014 AND Amount > 0\n  GROUP BY FullName, Vendor, TransactionDate, Amount\n  HAVING COUNT(*) > 1\n)\nGROUP BY FullName\nORDER BY DuplicateGroups DESC;",
+   "followup": {
+    "q": "Why count duplicate groups per person rather than lines?",
+    "a": "Otherwise one purchase charged three times would weigh as much as three separate incidents. Groups measure how often it happens."
+   },
    "tool": "SQL"
   },
   {
@@ -2397,6 +3658,10 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(*)\nFROM pcards\nWHERE Year = 2014\n  AND Amount BETWEEN 1000 AND 9999\n  AND Amount = CAST(Amount AS INTEGER)\n  AND CAST(Amount AS INTEGER) % 1000 = 0;",
+   "followup": {
+    "q": "Why can round amounts indicate fraud?",
+    "a": "Real purchases with tax, shipping or unit prices rarely end in 000. Invented amounts often do."
+   },
    "tool": "SQL"
   },
   {
@@ -2413,6 +3678,21 @@ window.BANK = {
     "unit": ""
    },
    "sql": "SELECT COUNT(DISTINCT UPPER(FullName)) AS IgnoringCase,\n       COUNT(DISTINCT FullName)        AS AsStored   -- 4,789\nFROM pcards;",
+   "mistakes": [
+    {
+     "answer": {
+      "type": "number",
+      "value": 4789.0,
+      "tol": 0
+     },
+     "hint": "That is the count as stored. Ignoring capitalisation means COUNT(DISTINCT UPPER(FullName)).",
+     "sql": "SELECT COUNT(DISTINCT FullName) FROM pcards;"
+    }
+   ],
+   "followup": {
+    "q": "Which count would you use for a cardholder analysis, and why?",
+    "a": "Usually the case-insensitive one, after checking that the merged names really are the same person, documented as a transformation step."
+   },
    "tool": "SQL"
   }
  ],

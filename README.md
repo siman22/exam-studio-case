@@ -7,6 +7,13 @@ A static practice website for the oral exam in Data Analytics in Accounting (SDU
 
 Students download the files, solve each question in Excel or SQL, type their result and check it. Every question has a worked solution. Nothing is stored or sent; the site has no server.
 
+## Improvement over the reference site: feedback that teaches
+
+The reference site tells a student whether an answer is right. This site also tells them **why it is wrong**, and **asks them to explain it when it is right**.
+
+- **Diagnosed mistakes (91).** When a wrong answer matches a typical mistake, for example forgetting to remove a duplicate row, matching on PreparerID without BusinessUnitID, using `>` where the control says "or more", or counting groups instead of lines, the student sees the likely cause. For SQL questions they can also see the query that produces their number. Every diagnosed value is produced by actually running the wrong method on the course data (`tools/feedback.py`). The build fails if a wrong method happens to give the correct answer, so a diagnosis can never be shown for a right answer.
+- **Examiner follow-ups (135).** After a correct answer the student gets the question an oral examiner would ask ("Why HAVING and not WHERE?", "Why is PlantID alone not a unique identifier?"), writes or says an answer, compares it with a model answer and marks whether they could explain it. Exams count correct answers and explained answers separately.
+
 ## Files
 
 ```
@@ -17,6 +24,7 @@ js/bank.js              question bank (generated, do not edit by hand)
 js/interpretation.js    regression exams (generated)
 data/                   datasets students download
 tools/build_bank.py     source of all questions; validates SQL answers
+tools/feedback.py       diagnosed mistakes and examiner follow-ups (improvement)
 tools/build_interpretation.py   generates the regression exams
 ```
 
@@ -25,7 +33,7 @@ tools/build_interpretation.py   generates the regression exams
 Open a terminal in this folder and run:
 
 ```
-python -m http.server 8000 (python3 for mac)
+python -m http.server 8000
 ```
 
 Then open http://localhost:8000. (Opening index.html directly also works.)
