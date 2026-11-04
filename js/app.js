@@ -441,7 +441,22 @@
       <div class="table-wrap"><table class="xl">
         <thead><tr><th></th><th>Coefficients</th><th>Standard Error</th><th>t Stat</th><th>P-value</th><th>Lower 95%</th><th>Upper 95%</th></tr></thead><tbody>
         ${o.coef.map(r => `<tr><td>${esc(r.name)}</td><td>${f4(r.coef)}</td><td>${f4(r.se)}</td><td>${f4(r.t)}</td><td>${f4(r.p)}</td><td>${f4(r.lo)}</td><td>${f4(r.hi)}</td></tr>`).join("")}
-      </tbody></table></div></div>`;
+      </tbody></table></div>${sciNote(o)}</div>`;
+  }
+
+  // Excel shows tiny numbers in scientific notation; explain one from this table
+  function sciNote(o) {
+    const vals = [o.anova.reg[4]].concat(o.coef.map(r => r.p));
+    const v = vals.find(x => x !== 0 && Math.abs(x) < 0.0001);
+    if (v === undefined) return "";
+    const shown = f4(v);                      // e.g. 2.50E-7
+    const [m, e] = shown.split("E");
+    const k = -Number(e);                     // 7
+    const digits = m.replace(".", "").replace(/0+$/, "");   // "25"
+    const plainText = k <= 9
+      ? "0." + "0".repeat(k - 1) + digits     // 0.00000025
+      : `0.000…${digits}, with ${k - 1} zeros after the decimal point`;
+    return `<p class="small muted" style="margin:.25rem 0 0">Like Excel, very small numbers are shown in scientific notation. ${shown} means ${m} × 10<sup>${e}</sup> = ${plainText}, far below 0.05.</p>`;
   }
 
   function interpList() {
