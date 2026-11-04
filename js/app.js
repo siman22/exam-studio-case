@@ -509,7 +509,7 @@
     <h1>Datasets</h1>
     <p class="lede">Every file used by the questions, taken from the course cases.</p>
     ${Object.entries(BANK.datasets).map(([k, d]) => `
-      <section class="sheet" style="padding-left:1.5rem">
+      <section class="sheet plain">
         <div class="sheet-head"><h2 style="margin:0;font-size:var(--step-1)">${esc(d.name)}</h2><span class="tag ${d.tool.toLowerCase()}">${d.tool}</span><span class="where">${esc(d.source)}</span></div>
         <p>${esc(d.about)}</p>
         ${filesList([k])}
